@@ -744,20 +744,31 @@ const iaBloqueada=()=>{ if(S.acad&&S.acad.iaLiberada===false){ toast('A IA não 
 async function chamarIA(prompt){
   const cfg=await Store.get('config','ia');
   if(!cfg||!cfg.chave){ if(MODE==='demo') return null; throw new Error('A IA ainda não foi ativada. Fale com o suporte do sistema.'); }
-  let r;
-  try{
-    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.modelo||'gemini-flash-latest')}:generateContent`,{
-      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':cfg.chave},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:0.7}})});
-  }catch(e){ throw new Error('Não foi possível falar com a IA. Verifique a internet.'); }
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok){
-    const msg=(j.error&&j.error.message)||'';
-    if(r.status===429) throw new Error('Limite de uso da IA atingido. Tente de novo em 1 minuto.');
-    if(/API key not valid|API_KEY_INVALID/i.test(msg)) throw new Error('Chave da IA inválida. Confira nas Configurações do dono do sistema.');
-    if(r.status===403) throw new Error('A chave da IA bloqueou este site. Confira as restrições da chave no Google.');
-    if(r.status===404) throw new Error('Modelo de IA não encontrado. Use "gemini-flash-latest" nas Configurações.');
-    throw new Error('Erro da IA: '+(msg||r.status));
+  // Se o modelo estiver sobrecarregado, tenta de novo e depois usa modelos reserva
+  const modelos=[...new Set([cfg.modelo||'gemini-flash-latest','gemini-flash-latest','gemini-flash-lite-latest'])];
+  const espera=ms=>new Promise(ok=>setTimeout(ok,ms));
+  const body=JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:0.7}});
+  let j=null, ultimo='';
+  tentativas: for(const modelo of modelos){
+    for(let t=0;t<2;t++){
+      let r;
+      try{ r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelo)}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':cfg.chave},body}); }
+      catch(e){ throw new Error('Não foi possível falar com a IA. Verifique a internet.'); }
+      const resp=await r.json().catch(()=>({}));
+      if(r.ok){ j=resp; break tentativas; }
+      const msg=(resp.error&&resp.error.message)||'';
+      if(/API key not valid|API_KEY_INVALID/i.test(msg)) throw new Error('Chave da IA inválida. Confira nas Configurações do dono do sistema.');
+      if(r.status===403) throw new Error('A chave da IA bloqueou este site. Confira as restrições da chave no Google.');
+      if(r.status===404){ ultimo='modelo'; continue tentativas; }      // modelo não existe: vai para o próximo
+      if(r.status===429){ ultimo='limite'; continue tentativas; }      // cota deste modelo esgotada: tenta outro
+      if([500,502,503,504].includes(r.status)){ ultimo='ocupada'; await espera(t===0?1500:4000); continue; } // sobrecarga: espera e tenta de novo
+      throw new Error('Erro da IA: '+(msg||r.status));
+    }
+  }
+  if(!j){
+    if(ultimo==='limite') throw new Error('Limite de uso grátis da IA atingido. Tente de novo em alguns minutos.');
+    if(ultimo==='modelo') throw new Error('Modelo de IA não encontrado. Use "gemini-flash-latest" nas Configurações.');
+    throw new Error('A IA do Google está sobrecarregada agora. Tente de novo em 1 ou 2 minutos.');
   }
   const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
   const res=lerJSON(parts.filter(p=>!p.thought).map(p=>p.text||'').join(''));
