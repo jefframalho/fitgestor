@@ -16,8 +16,13 @@ service cloud.firestore {
     function doAluno(a, alunoId) { return isAluno(a) && perfil().alunoId == alunoId; }
 
     // Configuração geral (sua chave Pix, WhatsApp, nome do sistema)
-    match /config/{doc} {
+    match /config/sistema {
       allow read: if logado();
+      allow write: if isSuper();
+    }
+    // Chave da IA: só você e a equipe das academias leem (alunos não)
+    match /config/ia {
+      allow read: if isSuper() || (temPerfil() && perfil().papel in ['admin', 'instrutor']);
       allow write: if isSuper();
     }
 
@@ -39,7 +44,7 @@ service cloud.firestore {
       // A academia pode mudar nome/Pix/WhatsApp, mas nunca vencimento, status ou valor do plano
       allow update: if isSuper()
         || (isStaff(a) && !request.resource.data.diff(resource.data).affectedKeys()
-              .hasAny(['status', 'vencimento', 'valorPlano', 'pagamentos', 'donoUid']));
+              .hasAny(['status', 'vencimento', 'valorPlano', 'pagamentos', 'donoUid', 'iaLiberada']));
 
       match /alunos/{id} {
         allow read: if isSuper() || isStaff(a) || doAluno(a, id);

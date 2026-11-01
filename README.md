@@ -50,6 +50,23 @@ vá em *Settings → Pages → Deploy from branch → main*. O link fica
 Depois de publicar, em **Authentication → Configurações → Domínios autorizados**, adicione o domínio
 do site (ex.: `seu-usuario.github.io`).
 
+## Ficha do aluno e Inteligência Artificial
+
+Na ficha de cada aluno, a academia tem:
+- **Anamnese:** nível, disponibilidade, condições de saúde, medicamentos, dores/lesões e questionário **PAR-Q**. Se o PAR-Q der "sim", o sistema marca a liberação médica como pendente.
+- **Avaliação física:** peso, altura, % de gordura, pressão, frequência cardíaca e 12 perímetros, com lado direito e esquerdo. O sistema calcula IMC, massa gorda e magra e a relação cintura/quadril com o risco, e mostra a evolução desde a 1ª avaliação.
+- **📄 Ficha completa:** abre a ficha pronta para imprimir ou salvar em PDF, com espaço para assinaturas.
+- **✨ Gerar com IA** (aba Treinos): a IA lê a ficha e monta a divisão de treino, respeitando lesões e saúde. O instrutor revisa antes de salvar.
+- **✨ Análise da IA** (aba Avaliação física): resumo da evolução, pontos de atenção e uma mensagem pronta para mandar ao aluno.
+
+### Ativar a IA (Google Gemini — tem plano grátis)
+1. Acesse **aistudio.google.com** com sua conta Google → **Get API key** → **Create API key**.
+2. No FitGestor, entre como dono → **Configurações** → cole a chave → **Salvar chave** → **Testar IA**.
+3. **Proteja a chave** (importante): em **console.cloud.google.com → APIs e serviços → Credenciais**, abra a chave → *Restrições de aplicativos* → **Referenciadores HTTP** → adicione `https://jefframalho.github.io/*` → Salvar. Assim, ela só funciona no seu site.
+4. Ao criar ou editar uma academia, você escolhe se a **IA está incluída no plano**, o que dá para vender como diferencial. Na lista de academias aparece quantas vezes cada uma usou a IA.
+
+A IA recebe só os dados de saúde e treino. Nome, telefone e e-mail do aluno **não** são enviados.
+
 ## Como funciona a cobrança das academias
 
 - Cada academia tem **valor** e **vencimento**. Ao clicar em **Receber**, o vencimento avança 1, 2, 3, 6 ou 12 meses.

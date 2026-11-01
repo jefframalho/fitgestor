@@ -67,7 +67,21 @@ tr.click{cursor:pointer} tr.click:hover td{background:#ffffff06}
 .toast.err{background:var(--bad);color:#fff}
 .empty{color:var(--mut);text-align:center;padding:30px}
 .av{width:36px;height:36px;border-radius:50%;background:#2a3142;display:grid;place-items:center;font-weight:700;color:var(--acc);flex-shrink:0;font-size:13px}
-.ex{display:grid;grid-template-columns:2.4fr .7fr .7fr .8fr .8fr 34px;gap:6px;margin-bottom:6px}
+.ex{display:grid;grid-template-columns:2.2fr .6fr .6fr .7fr .7fr 1.6fr 34px;gap:6px;margin-bottom:6px}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--txt);font-size:13px;cursor:pointer;margin:0}
+.checks input{width:auto;accent-color:var(--acc)}
+.checks label:has(input:checked){border-color:var(--acc);color:var(--acc)}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--acc);font-weight:700;margin:20px 0 10px}
+.alerta{background:#3d1b1f;border:1px solid #6b2a31;color:#fecaca;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px}
+.ia{background:linear-gradient(135deg,#1d2410,#171b25);border-color:#3b4d14}
+.btn.iab{background:linear-gradient(135deg,#c6f432,#7dd3fc);color:#111}
+.parq{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.parq select{width:90px;flex-shrink:0}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.mini>div{background:var(--bg2);border-radius:10px;padding:10px}
+.mini .sub{font-size:11.5px}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}@keyframes sp{to{transform:rotate(360deg)}}
 .prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
 .login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 0,#1c2410 0,var(--bg) 60%)}
@@ -97,7 +111,8 @@ tr.click{cursor:pointer} tr.click:hover td{background:#ffffff06}
  .nav{display:flex;overflow-x:auto;gap:4px}.nav a{white-space:nowrap}
  .side .foot,.acad-name{display:none}.logo{padding-bottom:10px}
  .main{padding:16px}.grid2{grid-template-columns:1fr}
- .ex{grid-template-columns:1fr 1fr 1fr;padding-bottom:8px;border-bottom:1px dashed var(--line)}.ex .n{grid-column:1/-1}.exhead{display:none}
+ .ex{grid-template-columns:1fr 1fr 1fr;padding-bottom:8px;border-bottom:1px dashed var(--line)}.ex .n,.ex .dc{grid-column:1/-1}.exhead{display:none}
+ .parq{flex-direction:column;align-items:stretch;gap:6px}.parq select{width:100%}
  h1{font-size:21px}
 }
 </style>
@@ -140,7 +155,7 @@ const app = () => document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const R = v => (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const num = v => (v===''||v==null) ? NaN : Number(String(v).replace(',','.'));
-const fmtN = n => Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
+const fmtN = n => Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2});
 const pad = n => String(n).padStart(2,'0');
 const isoDe = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const hoje = () => isoDe(new Date());
@@ -229,7 +244,7 @@ const Auth = {
   apagarDemo(id){ if(MODE==='demo'){ delete mem.users[id]; salvarDemo(); } }
 };
 
-const LS='fitgestor_demo_v1';
+const LS='fitgestor_demo_v2';
 function salvarDemo(){ try{ localStorage.setItem(LS, JSON.stringify(mem)); }catch(e){} }
 function carregarDemo(){ try{ mem=JSON.parse(localStorage.getItem(LS)); }catch(e){} if(!mem||!mem.db){ mem=seed(); salvarDemo(); } }
 function resetDemo(){ if(!confirm('Apagar tudo e restaurar os dados de exemplo?')) return; mem=seed(); salvarDemo(); ss.del('fg_uid'); telaLogin(); toast('Dados de exemplo restaurados.'); }
@@ -248,11 +263,13 @@ function seed(){
   const A='academias/acad1/';
   const lista=[['al1','João Pereira','(88) 98888-0001','1998-'+m.slice(5)+'-15','Hipertrofia',10,89.9],['al2','Maria Fernandes','(88) 98888-0002','1995-03-22','Emagrecimento',5,89.9],['al3','Pedro Alves','(88) 98888-0003','2001-07-09','Condicionamento',10,89.9],['al4','Larissa Rocha','(88) 98888-0004','1990-11-30','Emagrecimento',15,79.9],['al5','Rafael Costa','(88) 98888-0005','1987-01-12','Hipertrofia',20,120]];
   lista.forEach(([id,nome,tel,nasc,obj,dia,valor],i)=>{
-    put(A+'alunos',id,{nome,telefone:tel,nascimento:nasc,objetivo:obj,plano:'Mensal',valor,diaVenc:dia,ativo:true,email:i===0?'aluno@demo.com':'',uid:i===0?'u_aluno':'',obs:i===3?'Dor no joelho direito — evitar impacto.':'',criadoEm:addDias(h,-80+i*5),metas:i===0?{peso:76,gordura:15,cintura:84,braco:38}:{}});
+    const an=i===0?{nivel:'Intermediário',diasSemana:3,tempo:'60 min',rotina:'Sedentária (sentado)',experiencia:'Musculação por 8 meses, parou há 1 ano',gosta:'Treino de peito e bike',evitar:'Corrida longa',doencas:[],outrasDoencas:'',medicamentos:'',cirurgias:'',fumante:'Não',sono:'Regular',regioes:['Lombar'],lesoes:'Leve dor lombar depois de muito tempo sentado',parq:[false,false,false,false,false,false,false],liberacao:'Não necessária',data:addDias(h,-60),obsInstrutor:''}
+      :i===3?{nivel:'Iniciante',diasSemana:3,tempo:'45 min',rotina:'Moderada',experiencia:'Nunca treinou',gosta:'Dança',evitar:'',doencas:['Hipertensão'],outrasDoencas:'',medicamentos:'Losartana',cirurgias:'',fumante:'Não',sono:'Bom (7h ou mais)',regioes:['Joelho'],lesoes:'Dor no joelho direito ao agachar',parq:[false,false,false,false,true,true,false],liberacao:'Pendente',data:addDias(h,-30),obsInstrutor:'Evitar impacto.'}:null;
+    put(A+'alunos',id,{nome,telefone:tel,nascimento:nasc,sexo:[0,2,4].includes(i)?'Masculino':'Feminino',objetivo:obj,plano:'Mensal',valor,diaVenc:dia,ativo:true,email:i===0?'aluno@demo.com':'',uid:i===0?'u_aluno':'',obs:'',criadoEm:addDias(h,-80+i*5),metas:i===0?{peso:76,gordura:15,cintura:84,bracoD:38}:{},...(an?{anamnese:an}:{})});
     put(A+'mensalidades','mp'+id,{alunoId:id,competencia:mp,valor,vencimento:vencDe(mp,dia),pagoEm:i===3?'':vencDe(mp,dia),forma:i===3?'':'Pix'});
     put(A+'mensalidades','mc'+id,{alunoId:id,competencia:m,valor,vencimento:vencDe(m,dia),pagoEm:(i===0||i===2)?h:'',forma:(i===0||i===2)?'Pix':''});
   });
-  [[-60,82,1.75,22,100,92,98,34,56],[-30,80.5,1.75,20.5,101,90,97,35,57],[-2,79,1.75,19,102,88,96,36,58]].forEach(([d,peso,altura,gordura,peito,cintura,quadril,braco,coxa],i)=>put(A+'medidas','md'+i,{alunoId:'al1',data:addDias(h,d),peso,altura,gordura,peito,cintura,quadril,braco,coxa}));
+  [[-60,82,1.75,22,100,92,98,34,56,'13/8',78],[-30,80.5,1.75,20.5,101,90,97,35,57,'12/8',74],[-2,79,1.75,19,102,88,96,36,58,'12/8',70]].forEach(([d,peso,altura,gordura,peito,cintura,quadril,bracoD,coxaD,pa,fc],i)=>put(A+'medidas','md'+i,{alunoId:'al1',data:addDias(h,d),peso,altura,gordura,peito,cintura,quadril,bracoD,bracoE:bracoD-0.5,coxaD,coxaE:coxaD-0.5,pa,fc}));
   const T=(nome,dias,ex,obs)=>({alunoId:'al1',nome,dias,obs:obs||'',atualizadoEm:addDias(h,-5),exercicios:ex.map(([nome,series,reps,carga,descanso])=>({nome,series,reps,carga,descanso}))});
   put(A+'treinos','tA',T('Treino A — Peito e Tríceps','Seg / Qui',[['Supino reto com barra','4','10','40','60'],['Supino inclinado com halteres','3','12','16','60'],['Crucifixo na máquina','3','12','35','45'],['Tríceps no pulley','4','12','25','45'],['Tríceps francês','3','10','12','45']],'Aquecer 10 min na esteira antes.'));
   put(A+'treinos','tB',T('Treino B — Costas e Bíceps','Ter / Sex',[['Puxada frontal','4','10','50','60'],['Remada baixa','4','10','45','60'],['Remada unilateral','3','12','18','45'],['Rosca direta','4','10','20','45'],['Rosca martelo','3','12','10','45']]));
@@ -262,8 +279,30 @@ function seed(){
 }
 
 const EXERCICIOS=['Supino reto com barra','Supino inclinado com halteres','Supino declinado','Crucifixo na máquina','Crucifixo com halteres','Crossover','Flexão de braço','Puxada frontal','Puxada atrás','Remada baixa','Remada curvada','Remada unilateral','Pulldown','Barra fixa','Levantamento terra','Rosca direta','Rosca alternada','Rosca martelo','Rosca scott','Tríceps no pulley','Tríceps corda','Tríceps francês','Tríceps testa','Mergulho no banco','Desenvolvimento com halteres','Desenvolvimento na máquina','Elevação lateral','Elevação frontal','Encolhimento','Agachamento livre','Agachamento no smith','Agachamento búlgaro','Leg press 45°','Cadeira extensora','Mesa flexora','Cadeira flexora','Stiff','Afundo','Elevação pélvica','Cadeira abdutora','Cadeira adutora','Panturrilha em pé','Panturrilha sentado','Abdominal supra','Abdominal infra','Prancha','Esteira','Bicicleta ergométrica','Elíptico','Escada'];
-const CAMPOS=[['peso','Peso','kg'],['altura','Altura','m'],['gordura','% Gordura','%'],['peito','Peito','cm'],['cintura','Cintura','cm'],['abdomen','Abdômen','cm'],['quadril','Quadril','cm'],['braco','Braço','cm'],['coxa','Coxa','cm'],['panturrilha','Panturrilha','cm']];
-const METAS=[['peso','Peso','kg'],['gordura','% Gordura','%'],['cintura','Cintura','cm'],['abdomen','Abdômen','cm'],['quadril','Quadril','cm'],['braco','Braço','cm'],['coxa','Coxa','cm']];
+const CAMPOS=[['peso','Peso','kg'],['altura','Altura','m'],['gordura','% Gordura','%'],['fc','FC repouso','bpm'],['pescoco','Pescoço','cm'],['ombros','Ombros','cm'],['peito','Peito','cm'],['cintura','Cintura','cm'],['abdomen','Abdômen','cm'],['quadril','Quadril','cm'],['bracoD','Braço D','cm'],['bracoE','Braço E','cm'],['antebraco','Antebraço','cm'],['coxaD','Coxa D','cm'],['coxaE','Coxa E','cm'],['panturrilha','Panturrilha','cm']];
+const GRUPOS=[['Composição corporal',['peso','altura','gordura']],['Sinais vitais',['fc']],['Perímetros (cm)',['pescoco','ombros','peito','cintura','abdomen','quadril','bracoD','bracoE','antebraco','coxaD','coxaE','panturrilha']]];
+const METAS=[['peso','Peso','kg'],['gordura','% Gordura','%'],['cintura','Cintura','cm'],['abdomen','Abdômen','cm'],['quadril','Quadril','cm'],['bracoD','Braço','cm'],['coxaD','Coxa','cm']];
+const DOENCAS=['Hipertensão','Diabetes','Cardiopatia','Asma/bronquite','Colesterol alto','Tireoide','Labirintite','Epilepsia','Gestante','Obesidade'];
+const REGIOES=['Joelho','Ombro','Lombar','Cervical','Quadril','Tornozelo','Punho/cotovelo'];
+const PARQ=['Algum médico já disse que você tem problema no coração e só deve fazer atividade física com supervisão?','Sente dor no peito quando faz atividade física?','No último mês, sentiu dor no peito sem estar fazendo esforço?','Já perdeu o equilíbrio por tontura ou perdeu a consciência?','Tem algum problema nos ossos ou articulações que pode piorar com exercício?','Toma remédio para pressão ou para o coração?','Sabe de algum outro motivo para não fazer atividade física?'];
+const imcClass=v=>v<18.5?'Abaixo do peso':v<25?'Peso normal':v<30?'Sobrepeso':v<35?'Obesidade grau I':v<40?'Obesidade grau II':'Obesidade grau III';
+function composicao(m,sexo){
+  const o={}, p=num(m.peso); let h=num(m.altura); if(h>3) h/=100;
+  if(p&&h){ o.imc=p/(h*h); o.imcClass=imcClass(o.imc); }
+  const g=num(m.gordura); if(p&&!isNaN(g)){ o.mg=p*g/100; o.mm=p-o.mg; }
+  const c=num(m.cintura), q=num(m.quadril);
+  if(c&&q){ o.rcq=c/q; const f=sexo==='Feminino'; o.rcqRisco=f?(o.rcq<0.8?'Baixo':o.rcq<0.85?'Moderado':'Alto'):(o.rcq<0.9?'Baixo':o.rcq<1?'Moderado':'Alto'); }
+  return o;
+}
+function alertasAluno(a){
+  const n=a.anamnese||{}, l=[];
+  if((n.parq||[]).some(Boolean)) l.push('PAR-Q positivo'+(n.liberacao==='Entregue'?' (liberação médica entregue)':' — exigir liberação médica'));
+  if((n.doencas||[]).length||n.outrasDoencas) l.push('Saúde: '+[...(n.doencas||[]),n.outrasDoencas].filter(Boolean).join(', '));
+  if((n.regioes||[]).length) l.push('Dor/lesão: '+n.regioes.join(', ')+(n.lesoes?' — '+n.lesoes:''));
+  if(n.medicamentos) l.push('Medicamentos: '+n.medicamentos);
+  if(a.obs) l.push(a.obs);
+  return l;
+}
 const rotulo = k => (CAMPOS.find(c=>c[0]===k)||[k,k])[1];
 
 /* ======================= início e login ======================= */
@@ -382,7 +421,7 @@ VIEWS.academias=async el=>{
   el.innerHTML=`<div class="top"><div><h1>Academias</h1><p class="sub">Clientes do sistema, mensalidades e bloqueios</p></div><button class="btn p" onclick="novaAcademia()">+ Nova academia</button></div>
   <div class="cards">${kpi('Academias cadastradas',l.length,'🏢')}${kpi('Com acesso liberado',ativas.length,'✅','var(--ok)')}${kpi('Receita mensal prevista',R(soma(l.filter(a=>a.status!=='bloqueado'),'valorPlano')),'💰')}${kpi('Em atraso',atras.length,'⚠️',atras.length?'var(--bad)':'')}</div>
   <div class="card tbl" style="padding:6px 10px">${l.length?`<table><thead><tr><th>Academia</th><th>WhatsApp</th><th>Mensalidade</th><th>Vencimento</th><th>Situação</th><th></th></tr></thead><tbody>
-  ${l.map(a=>{const [c,t]=situacaoAcad(a);return `<tr><td><b>${esc(a.nome)}</b><div class="sub">${esc(a.responsavel||'')} · ${esc(a.email||'')}</div></td><td>${esc(a.whatsapp||'—')}</td><td>${R(a.valorPlano)}</td><td>${fmtD(a.vencimento)}</td><td><span class="badge b-${c}">${t}</span></td>
+  ${l.map(a=>{const [c,t]=situacaoAcad(a);return `<tr><td><b>${esc(a.nome)}</b><div class="sub">${esc(a.responsavel||'')} · ${esc(a.email||'')}</div><div class="sub" style="font-size:11.5px">${a.iaLiberada===false?'IA não incluída':`✨ IA: ${a.iaUsos||0} uso(s)`}</div></td><td>${esc(a.whatsapp||'—')}</td><td>${R(a.valorPlano)}</td><td>${fmtD(a.vencimento)}</td><td><span class="badge b-${c}">${t}</span></td>
   <td style="text-align:right;white-space:nowrap"><button class="btn sm p" onclick="receberAcad('${a.id}')">Receber</button> ${a.whatsapp?`<a class="btn sm g" target="_blank" href="${cobrarAcad(a)}">Cobrar</a>`:''} <button class="btn sm ghost" onclick="editarAcademia('${a.id}')">Editar</button> <button class="btn sm ${a.status==='bloqueado'?'ghost':'d'}" onclick="toggleBloqueioAcad('${a.id}')">${a.status==='bloqueado'?'Desbloquear':'Bloquear'}</button></td></tr>`}).join('')}
   </tbody></table>`:'<div class="empty">Nenhuma academia cadastrada ainda.</div>'}</div>
   <p class="sub" style="margin-top:12px">O acesso de uma academia é suspenso automaticamente com mais de ${TOLERANCIA_DIAS} dias de atraso. “Receber” registra o pagamento e libera na hora.</p>`;
@@ -398,11 +437,12 @@ function novaAcademia(){
     <div><label>Senha inicial *</label><input name="senha" required minlength="6" value="${gerarSenha()}"></div>
     <div><label>Mensalidade do sistema (R$)</label><input type="number" step="0.01" min="0" name="valorPlano" value="${S.sis.valorPadrao||99.9}" required></div>
     <div><label>Primeiro vencimento</label><input type="date" name="vencimento" value="${addDias(hoje(),7)}" required></div>
+    <div><label>IA incluída no plano</label><select name="iaLiberada">${opts(['Sim','Não'],'Sim')}</select></div>
   </div><p class="sub" style="margin-top:10px">Dica: o primeiro vencimento em 7 dias funciona como período de teste grátis.</p>${rodapeModal('Criar academia')}</form>`);
   onSubmit(m,async d=>{
     const email=d.email.trim().toLowerCase();
     const id=await Auth.criarUsuario(email,d.senha);
-    const acadId=await Store.add('academias',{nome:d.nome,responsavel:d.responsavel,whatsapp:d.whatsapp,email,pix:'',endereco:'',valorPlano:num(d.valorPlano)||0,vencimento:d.vencimento,status:'ativo',criadoEm:hoje(),pagamentos:[],donoUid:id});
+    const acadId=await Store.add('academias',{nome:d.nome,responsavel:d.responsavel,whatsapp:d.whatsapp,email,pix:'',endereco:'',valorPlano:num(d.valorPlano)||0,vencimento:d.vencimento,status:'ativo',criadoEm:hoje(),pagamentos:[],donoUid:id,iaLiberada:d.iaLiberada==='Sim',iaUsos:0});
     await Store.set('usuarios',id,{papel:'admin',academiaId:acadId,nome:d.responsavel,email},false);
     const msg=`Olá, ${primeiroNome(d.responsavel)}! 🎉 O sistema da ${d.nome} está pronto.\n\n🔗 ${urlPainel()}\n📧 Login: ${email}\n🔑 Senha: ${d.senha}\n\nPara trocar a senha, use “Esqueci minha senha” na tela de entrada.`;
     abrirModal(`<h2>✅ Academia criada!</h2><p class="sub">Envie os dados de acesso para o responsável:</p><div class="pix" style="margin:12px 0;white-space:pre-wrap">${esc(msg)}</div>
@@ -417,8 +457,9 @@ function editarAcademia(id){
     <div><label>WhatsApp</label><input name="whatsapp" value="${esc(a.whatsapp)}"></div>
     <div><label>Mensalidade do sistema (R$)</label><input type="number" step="0.01" name="valorPlano" value="${a.valorPlano}"></div>
     <div><label>Vencimento</label><input type="date" name="vencimento" value="${a.vencimento}" required></div>
+    <div><label>IA incluída no plano</label><select name="iaLiberada">${opts(['Sim','Não'],a.iaLiberada===false?'Não':'Sim')}</select></div>
   </div>${rodapeModal('Salvar')}</form>`);
-  onSubmit(m,async d=>{ d.valorPlano=num(d.valorPlano)||0; await Store.set('academias',id,d); fecharModal(); toast('Academia atualizada!'); S.refresh(); });
+  onSubmit(m,async d=>{ d.valorPlano=num(d.valorPlano)||0; d.iaLiberada=d.iaLiberada==='Sim'; await Store.set('academias',id,d); fecharModal(); toast('Academia atualizada!'); S.refresh(); });
 }
 function receberAcad(id){
   const a=S.acads.find(x=>x.id===id);
@@ -441,16 +482,30 @@ async function toggleBloqueioAcad(id){
   await Store.set('academias',id,{status:bloq?'bloqueado':'ativo'}); toast(bloq?'Academia bloqueada.':'Academia desbloqueada.'); S.refresh();
 }
 VIEWS.sistema=async el=>{
-  const s=S.sis;
-  el.innerHTML=`<div class="top"><div><h1>Configurações do sistema</h1><p class="sub">Esses dados aparecem para as academias na hora de pagar</p></div></div>
-  <div class="card" style="max-width:640px"><form><div class="fg">
+  const s=S.sis, ia=(await Store.get('config','ia'))||{};
+  el.innerHTML=`<div class="top"><div><h1>Configurações do sistema</h1><p class="sub">Dados de pagamento e inteligência artificial</p></div></div>
+  <div id="cfgIA" class="card ia" style="max-width:640px;margin-bottom:14px"><h2>✨ Inteligência artificial (Google Gemini)</h2>
+  <p class="sub" style="margin-bottom:12px">Crie a chave grátis em <b>aistudio.google.com</b> → <b>Get API key</b>. Todas as academias com IA liberada usam esta chave. ${ia.chave?'<span class="badge b-pago">Configurada</span>':'<span class="badge b-pendente">Não configurada</span>'}</p>
+  <form><div class="fg"><div class="full"><label>Chave da API do Gemini</label><input name="chave" type="password" autocomplete="off" value="${esc(ia.chave)}" placeholder="AIza..."></div>
+  <div><label>Modelo</label><input name="modelo" value="${esc(ia.modelo||'gemini-flash-latest')}"></div></div>
+  <div class="mfoot"><button type="button" class="btn ghost" onclick="testarIA(this)">Testar IA</button><button class="btn p">Salvar chave</button></div></form></div>
+  <div id="cfgSis" class="card" style="max-width:640px"><h2>💳 Pagamento das academias</h2><form><div class="fg">
     <div class="full"><label>Nome do sistema</label><input name="nome" value="${esc(s.nome||'FitGestor')}"></div>
     <div><label>Sua chave Pix (para receber das academias)</label><input name="pix" value="${esc(s.pix)}"></div>
     <div><label>Seu WhatsApp (suporte e comprovantes)</label><input name="whatsapp" value="${esc(s.whatsapp)}"></div>
     <div><label>Mensalidade padrão (R$)</label><input type="number" step="0.01" name="valorPadrao" value="${s.valorPadrao||99.9}"></div>
   </div><div class="mfoot"><button class="btn p">Salvar</button></div></form></div>`;
-  onSubmit(el,async d=>{ d.valorPadrao=num(d.valorPadrao)||0; await Store.set('config','sistema',d); S.sis={...S.sis,...d}; toast('Configurações salvas!'); go('sistema'); });
+  onSubmit($('#cfgSis'),async d=>{ d.valorPadrao=num(d.valorPadrao)||0; await Store.set('config','sistema',d); S.sis={...S.sis,...d}; toast('Configurações salvas!'); go('sistema'); });
+  onSubmit($('#cfgIA'),async d=>{ await Store.set('config','ia',{chave:d.chave.trim(),modelo:d.modelo.trim()||'gemini-flash-latest'}); toast('Chave da IA salva! Clique em “Testar IA”.'); go('sistema'); });
 };
+async function testarIA(btn){
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Testando...';
+  try{
+    const r=await chamarIA('Responda SOMENTE com JSON: {"ok":true,"mensagem":"uma frase curta e animada de boas-vindas para uma academia"}');
+    if(!r) toast('Salve a chave antes de testar.',1); else toast('✅ IA funcionando: '+(r.mensagem||'ok'));
+  }catch(e){ toast(erroAuth(e),1); }
+  finally{ btn.disabled=false; btn.textContent='Testar IA'; }
+}
 
 function telaBloqueio(){
   const a=S.acad, aluno=S.perfil.papel==='aluno', d=diasEntre(a.vencimento,hoje());
@@ -510,6 +565,7 @@ function formAlunoHTML(a={}){
     <div class="full"><label>Nome completo *</label><input name="nome" required value="${esc(a.nome)}"></div>
     <div><label>WhatsApp</label><input name="telefone" value="${esc(a.telefone)}" placeholder="(88) 99999-9999"></div>
     <div><label>Data de nascimento</label><input type="date" name="nascimento" value="${esc(a.nascimento)}"></div>
+    <div><label>Sexo</label><select name="sexo">${opts(['Masculino','Feminino'],a.sexo)}</select></div>
     <div><label>Objetivo</label><select name="objetivo">${opts(['Hipertrofia','Emagrecimento','Condicionamento','Saúde e bem-estar','Reabilitação','Performance'],a.objetivo)}</select></div>
     <div><label>Plano</label><select name="plano">${opts(['Mensal','Trimestral','Semestral','Anual'],a.plano)}</select></div>
     <div><label>Valor da mensalidade (R$) *</label><input name="valor" type="number" step="0.01" min="0" value="${a.valor??''}" required></div>
@@ -525,7 +581,7 @@ function novoAluno(){
     Object.assign(d,{ativo:true,uid:'',email:'',criadoEm:hoje(),metas:{}});
     const id=await Store.add(P('alunos'),d);
     if(gerar) await Store.add(P('mensalidades'),{alunoId:id,competencia:mesAtual(),valor:d.valor,vencimento:vencDe(mesAtual(),d.diaVenc),pagoEm:'',forma:''});
-    toast('Aluno cadastrado!'); go('ficha',id,'treinos');
+    toast('Aluno cadastrado! Agora preencha a anamnese.'); go('ficha',id,'anamnese');
   });
 }
 
@@ -533,11 +589,13 @@ VIEWS.ficha=async(el,id,aba='dados')=>{
   const a=await Store.get(P('alunos'),id);
   if(!a){ el.innerHTML='<div class="empty">Aluno não encontrado.</div>'; return; }
   S.aluno=a; S.refresh=()=>go('ficha',id,aba);
-  const abas=[['dados','Dados'],['treinos','Treinos'],['medidas','Medidas e metas'],['mensalidades','Mensalidades'],['acesso','Acesso do aluno']];
+  const abas=[['dados','Dados'],['anamnese','Anamnese'],['medidas','Avaliação física'],['treinos','Treinos'],['mensalidades','Mensalidades'],['acesso','Acesso do aluno']];
+  const al=alertasAluno(a);
   el.innerHTML=`<p style="margin-bottom:12px"><a class="sub" style="cursor:pointer" onclick="go('alunos')">← Voltar para alunos</a></p>
   <div class="top"><div class="row" style="flex-wrap:nowrap"><div class="av" style="width:52px;height:52px;font-size:18px">${ini(a.nome)}</div><div><h1>${esc(a.nome)}</h1><p class="sub">${esc(a.objetivo||'')} · ${esc(a.plano||'')} ${R(a.valor)}${a.nascimento?' · '+idade(a.nascimento)+' anos':''} · ${a.ativo===false?'<span class="badge b-inativo">Inativo</span>':'<span class="badge b-pago">Ativo</span>'}</p></div></div>
-  ${a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,`Olá, ${primeiroNome(a.nome)}!`)}">💬 WhatsApp</a>`:''}</div>
-  ${a.obs?`<div class="card aviso" style="padding:12px 16px">⚕️ ${esc(a.obs)}</div>`:''}
+  <div class="row"><button class="btn ghost" onclick="fichaCompleta()">📄 Ficha completa</button>${a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,`Olá, ${primeiroNome(a.nome)}!`)}">💬 WhatsApp</a>`:''}</div></div>
+  ${al.length?`<div class="alerta">⚕️ ${al.map(esc).join('<br>')}</div>`:''}
+  ${!a.anamnese&&aba!=='anamnese'?`<div class="card aviso" style="padding:10px 16px">📋 Anamnese ainda não preenchida. <a style="color:var(--acc);cursor:pointer;font-weight:600" onclick="go('ficha','${id}','anamnese')">Preencher agora</a></div>`:''}
   <div class="tabs">${abas.map(([k,t])=>`<a class="${k===aba?'on':''}" onclick="go('ficha','${id}','${k}')">${t}</a>`).join('')}</div><div id="aba"></div>`;
   await ABAS[aba]($('#aba'),a);
 };
@@ -546,6 +604,80 @@ ABAS.dados=async(el,a)=>{
   el.innerHTML=`<div class="card"><form>${formAlunoHTML(a)}<div class="mfoot" style="justify-content:space-between"><div class="row"><button type="button" class="btn ghost" onclick="toggleAtivo()">${a.ativo===false?'Reativar aluno':'Inativar aluno'}</button><button type="button" class="btn d" onclick="excluirAluno()">Excluir</button></div><button class="btn p">Salvar alterações</button></div></form></div>`;
   onSubmit(el,async d=>{ d.valor=num(d.valor)||0; d.diaVenc=clampDia(d.diaVenc); await Store.set(P('alunos'),a.id,d); toast('Dados salvos!'); S.refresh(); });
 };
+/* ---------- anamnese ---------- */
+ABAS.anamnese=async(el,a)=>{
+  const n=a.anamnese||{}, parq=n.parq||[];
+  const chk=(name,list,sel)=>`<div class="checks">${list.map(o=>`<label><input type="checkbox" name="${name}" value="${esc(o)}" ${(sel||[]).includes(o)?'checked':''}>${esc(o)}</label>`).join('')}</div>`;
+  el.innerHTML=`<div class="card"><form>
+  <div class="sec" style="margin-top:0">Treino e rotina</div>
+  <div class="fg">
+    <div><label>Nível</label><select name="nivel">${opts(['Iniciante','Intermediário','Avançado'],n.nivel)}</select></div>
+    <div><label>Dias de treino por semana</label><select name="diasSemana">${opts(['2','3','4','5','6'],String(n.diasSemana||3))}</select></div>
+    <div><label>Tempo por treino</label><select name="tempo">${opts(['30 min','45 min','60 min','75 min','90 min'],n.tempo||'60 min')}</select></div>
+    <div><label>Rotina no trabalho</label><select name="rotina">${opts(['Sedentária (sentado)','Moderada','Ativa (muito esforço físico)'],n.rotina)}</select></div>
+    <div class="full"><label>Já praticou atividade física? Qual e por quanto tempo?</label><input name="experiencia" value="${esc(n.experiencia)}"></div>
+    <div><label>Gosta de fazer</label><input name="gosta" value="${esc(n.gosta)}" placeholder="Ex.: bike, funcional"></div>
+    <div><label>Não gosta / não quer fazer</label><input name="evitar" value="${esc(n.evitar)}"></div>
+  </div>
+  <div class="sec">Saúde</div>
+  <label>Condições de saúde</label>${chk('doencas',DOENCAS,n.doencas)}
+  <div class="fg" style="margin-top:12px">
+    <div class="full"><label>Outras doenças / detalhes</label><input name="outrasDoencas" value="${esc(n.outrasDoencas)}"></div>
+    <div><label>Medicamentos de uso contínuo</label><input name="medicamentos" value="${esc(n.medicamentos)}"></div>
+    <div><label>Cirurgias</label><input name="cirurgias" value="${esc(n.cirurgias)}"></div>
+    <div><label>Fumante</label><select name="fumante">${opts(['Não','Sim','Ex-fumante'],n.fumante)}</select></div>
+    <div><label>Sono</label><select name="sono">${opts(['Bom (7h ou mais)','Regular','Ruim (menos de 6h)'],n.sono)}</select></div>
+  </div>
+  <div class="sec">Dores e lesões</div>
+  <label>Regiões com dor ou lesão</label>${chk('regioes',REGIOES,n.regioes)}
+  <div style="margin-top:12px"><label>Descreva (o que sente, desde quando, o que piora)</label><textarea name="lesoes" rows="2">${esc(n.lesoes)}</textarea></div>
+  <div class="sec">PAR-Q — prontidão para atividade física</div>
+  ${PARQ.map((q,i)=>`<div class="parq"><span>${i+1}. ${q}</span><select name="parq${i}">${opts(['Não','Sim'],parq[i]?'Sim':'Não')}</select></div>`).join('')}
+  <div class="fg" style="margin-top:14px">
+    <div><label>Liberação médica</label><select name="liberacao">${opts(['Não necessária','Pendente','Entregue'],n.liberacao)}</select></div>
+    <div><label>Data da anamnese</label><input type="date" name="data" value="${n.data||hoje()}"></div>
+  </div>
+  <div style="margin-top:12px"><label>Observações do instrutor</label><textarea name="obsInstrutor" rows="2">${esc(n.obsInstrutor)}</textarea></div>
+  <div class="mfoot"><button class="btn p">Salvar anamnese</button></div></form></div>`;
+  onSubmit(el,async(d,f)=>{
+    const fd=new FormData(f);
+    const an={nivel:d.nivel,diasSemana:parseInt(d.diasSemana)||3,tempo:d.tempo,rotina:d.rotina,experiencia:d.experiencia.trim(),gosta:d.gosta.trim(),evitar:d.evitar.trim(),
+      doencas:fd.getAll('doencas'),outrasDoencas:d.outrasDoencas.trim(),medicamentos:d.medicamentos.trim(),cirurgias:d.cirurgias.trim(),fumante:d.fumante,sono:d.sono,
+      regioes:fd.getAll('regioes'),lesoes:d.lesoes.trim(),parq:PARQ.map((_,i)=>d['parq'+i]==='Sim'),liberacao:d.liberacao,data:d.data,obsInstrutor:d.obsInstrutor.trim()};
+    if(an.parq.some(Boolean)&&an.liberacao==='Não necessária') an.liberacao='Pendente';
+    await Store.set(P('alunos'),a.id,{anamnese:an});
+    toast(an.parq.some(Boolean)?'Anamnese salva. PAR-Q positivo: peça liberação médica.':'Anamnese salva!');
+    go('ficha',a.id,'medidas');
+  });
+};
+
+/* ---------- ficha completa para imprimir / PDF ---------- */
+async function fichaCompleta(){
+  const w=window.open('','_blank'); if(!w) return toast('Permita pop-ups para abrir a ficha.',1);
+  w.document.write('<p style="font-family:sans-serif;padding:20px">Montando a ficha...</p>');
+  const a=S.aluno;
+  const [md,ts]=await Promise.all([Store.list(P('medidas'),['alunoId',a.id]),Store.list(P('treinos'),['alunoId',a.id])]);
+  md.sort(porData); ts.sort(porNome);
+  const n=a.anamnese||{}, u=md[md.length-1], c=u?composicao(u,a.sexo):{}, ult=md.slice(-6), mt=a.metas||{}, temMeta=Object.keys(mt).length>0, al=alertasAluno(a);
+  const row=(l,v)=>v?`<tr><th>${l}</th><td>${esc(v)}</td></tr>`:'';
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ficha — ${esc(a.nome)}</title>
+  <style>body{font-family:Arial,sans-serif;color:#111;max-width:820px;margin:24px auto;padding:0 16px;font-size:13px}h1{font-size:22px;margin:0}h2{font-size:15px;border-bottom:2px solid #111;padding-bottom:4px;margin-top:24px}h3{font-size:13.5px;margin:14px 0 4px}table{width:100%;border-collapse:collapse;margin-top:6px}th,td{border:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top}th{background:#f2f2f2;width:32%}.g th{width:auto}.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #111;padding-bottom:8px;gap:12px}.al{background:#fde8e8;border:1px solid #f5a5a5;padding:8px;border-radius:6px;margin-top:10px}.sig{margin-top:60px;display:flex;gap:40px}.sig div{flex:1;border-top:1px solid #111;text-align:center;padding-top:4px}.np{margin-bottom:14px}.np button{padding:9px 18px;font-size:14px;cursor:pointer}@media print{.np{display:none}body{margin:0}h2{break-after:avoid}}</style></head><body>
+  <div class="np"><button onclick="print()">🖨️ Imprimir / Salvar em PDF</button></div>
+  <div class="top"><div><h1>${esc(a.nome)}</h1><div>${esc(S.acad.nome)}${S.acad.endereco?' · '+esc(S.acad.endereco):''}</div></div><div>Emitida em ${fmtD(hoje())}</div></div>
+  ${al.length?`<div class="al"><b>Atenção:</b> ${al.map(esc).join(' · ')}</div>`:''}
+  <h2>Dados pessoais</h2><table>${row('WhatsApp',a.telefone)}${row('Nascimento',a.nascimento?`${fmtD(a.nascimento)} (${idade(a.nascimento)} anos)`:'')}${row('Sexo',a.sexo)}${row('Objetivo',a.objetivo)}${row('Plano',`${a.plano||''} · ${R(a.valor)} · vence dia ${a.diaVenc}`)}${row('Observações',a.obs)}</table>
+  <h2>Anamnese${n.data?' ('+fmtD(n.data)+')':''}</h2>
+  ${a.anamnese?`<table>${row('Nível',n.nivel)}${row('Frequência',`${n.diasSemana} dias por semana · ${n.tempo}`)}${row('Rotina no trabalho',n.rotina)}${row('Experiência',n.experiencia)}${row('Gosta de',n.gosta)}${row('Não quer fazer',n.evitar)}${row('Condições de saúde',[...(n.doencas||[]),n.outrasDoencas].filter(Boolean).join(', ')||'Nenhuma')}${row('Medicamentos',n.medicamentos)}${row('Cirurgias',n.cirurgias)}${row('Fumante',n.fumante)}${row('Sono',n.sono)}${row('Dores / lesões',[...(n.regioes||[]),n.lesoes].filter(Boolean).join(' — '))}${row('Liberação médica',n.liberacao)}${row('Obs. do instrutor',n.obsInstrutor)}</table>
+  <table class="g"><tr><th>PAR-Q</th><th style="width:60px">Resposta</th></tr>${PARQ.map((q,i)=>`<tr><td>${i+1}. ${q}</td><td>${(n.parq||[])[i]?'<b>SIM</b>':'Não'}</td></tr>`).join('')}</table>`:'<p>Não preenchida.</p>'}
+  <h2>Avaliação física</h2>
+  ${u?`<table>${row('Última avaliação',fmtD(u.data))}${c.imc?row('IMC',fmtN(c.imc)+' — '+c.imcClass):''}${c.mg!=null?row('Massa gorda / massa magra',fmtN(c.mg)+' kg / '+fmtN(c.mm)+' kg'):''}${c.rcq?row('Relação cintura/quadril',c.rcq.toFixed(2)+' — risco '+c.rcqRisco.toLowerCase()):''}${row('Pressão arterial',u.pa)}</table>
+  <table class="g"><tr><th>Medida</th>${ult.map(m=>`<th>${fmtD(m.data)}</th>`).join('')}${temMeta?'<th>Meta</th>':''}</tr>${CAMPOS.filter(([k])=>ult.some(m=>!isNaN(num(m[k])))).map(([k,t,un])=>`<tr><td>${t} (${un})</td>${ult.map(m=>`<td>${isNaN(num(m[k]))?'—':fmtN(m[k])}</td>`).join('')}${temMeta?`<td>${isNaN(num(mt[k]))?'':fmtN(mt[k])}</td>`:''}</tr>`).join('')}</table>`:'<p>Nenhuma avaliação registrada.</p>'}
+  <h2>Treinos</h2>
+  ${ts.length?ts.map(t=>`<h3>${esc(t.nome)}${t.dias?` <span style="font-weight:normal">(${esc(t.dias)})</span>`:''}</h3><table class="g"><tr><th>#</th><th>Exercício</th><th>Séries</th><th>Reps</th><th>Carga</th><th>Desc.</th><th>Dica</th></tr>${(t.exercicios||[]).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.nome)}</td><td>${esc(x.series)}</td><td>${esc(x.reps)}</td><td>${esc(x.carga)}</td><td>${esc(x.descanso)}</td><td>${esc(x.dica)}</td></tr>`).join('')}</table>${t.obs?`<p>📝 ${esc(t.obs)}</p>`:''}`).join(''):'<p>Nenhum treino cadastrado.</p>'}
+  <div class="sig"><div>Aluno(a)</div><div>Professor(a) responsável · CREF</div></div></body></html>`;
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
 async function toggleAtivo(){ const a=S.aluno; await Store.set(P('alunos'),a.id,{ativo:a.ativo===false}); toast(a.ativo===false?'Aluno reativado.':'Aluno inativado — não entra mais na geração de mensalidades.'); S.refresh(); }
 async function excluirAluno(){
   const a=S.aluno;
@@ -559,30 +691,30 @@ async function excluirAluno(){
 const descEx=x=>[x.series&&x.reps?`${x.series}x${x.reps}`:(x.series?x.series+' séries':(x.reps?x.reps+' reps':'')),x.carga?x.carga+(isNaN(x.carga)?'':' kg'):'',x.descanso?'descanso '+x.descanso+(isNaN(x.descanso)?'':'s'):''].filter(Boolean).join(' · ');
 function textoFicha(a,ts){
   let s=`🏋️ *${S.acad.nome}*\nOlá, ${primeiroNome(a.nome)}! Segue sua ficha de treino:\n`;
-  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); s+=`${i+1}. ${x.nome}${d?' — '+d:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
+  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); s+=`${i+1}. ${x.nome}${d?' — '+d:''}${x.dica?`\n   💡 ${x.dica}`:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
   return s+`\n📱 Acompanhe no seu painel: ${urlPainel()}\nBons treinos! 💪`;
 }
 ABAS.treinos=async(el,a)=>{
   const [ts,regs]=await Promise.all([Store.list(P('treinos'),['alunoId',a.id]),Store.list(P('registros'),['alunoId',a.id])]);
   S.treinos=ts.sort(porNome); regs.sort((x,y)=>y.data.localeCompare(x.data));
   el.innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:14px"><p class="sub">${regs.length?`Último treino concluído: <b>${fmtD(regs[0].data)}</b> (${esc(regs[0].nome)}) · ${regs.filter(r=>diasEntre(r.data,hoje())<7).length} treino(s) nos últimos 7 dias`:'O aluno ainda não marcou treinos concluídos no painel.'}</p>
-  <div class="row">${S.treinos.length&&a.telefone?`<a class="btn g sm" target="_blank" href="${wa(a.telefone,textoFicha(a,S.treinos))}">📲 Enviar ficha completa</a>`:''}<button class="btn p sm" onclick="editarTreino()">+ Novo treino</button></div></div>
+  <div class="row">${S.treinos.length&&a.telefone?`<a class="btn g sm" target="_blank" href="${wa(a.telefone,textoFicha(a,S.treinos))}">📲 Enviar ficha completa</a>`:''}<button class="btn iab sm" onclick="gerarTreinoIA()">✨ Gerar com IA</button><button class="btn p sm" onclick="editarTreino()">+ Novo treino</button></div></div>
   ${S.treinos.length?`<div class="grid2">${S.treinos.map(t=>cardTreino(t,a)).join('')}</div>`:'<div class="card empty">Nenhum treino cadastrado. Clique em “Novo treino” para montar a ficha.</div>'}`;
 };
 function cardTreino(t,a){
   return `<div class="card"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub" style="margin-bottom:6px">${esc(t.dias||'')}${t.atualizadoEm?' · atualizado em '+fmtD(t.atualizadoEm):''}</p>
-  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}</div></div></div>`).join('')}
+  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}${x.dica?' · 💡 '+esc(x.dica):''}</div></div></div>`).join('')}
   ${t.obs?`<p class="sub" style="margin-top:8px">📝 ${esc(t.obs)}</p>`:''}
   <div class="row" style="margin-top:12px;gap:6px"><button class="btn sm ghost" onclick="editarTreino('${t.id}')">✏️ Editar</button><button class="btn sm ghost" onclick="copiarTreino('${t.id}')">⧉ Copiar para outro aluno</button>${a.telefone?`<a class="btn sm g" target="_blank" href="${wa(a.telefone,textoFicha(a,[t]))}">📲 Enviar</a>`:''}<button class="btn sm d" title="Excluir" onclick="excluirTreino('${t.id}')">🗑</button></div></div>`;
 }
-const linhaEx=(x={})=>`<div class="ex exrow"><input class="n" data-k="nome" list="dlEx" placeholder="Exercício" value="${esc(x.nome)}"><input data-k="series" placeholder="Séries" value="${esc(x.series)}"><input data-k="reps" placeholder="Reps" value="${esc(x.reps)}"><input data-k="carga" placeholder="Carga" value="${esc(x.carga)}"><input data-k="descanso" placeholder="Desc." value="${esc(x.descanso)}"><button type="button" class="btn sm ghost" title="Remover" onclick="this.parentElement.remove()">✕</button></div>`;
+const linhaEx=(x={})=>`<div class="ex exrow"><input class="n" data-k="nome" list="dlEx" placeholder="Exercício" value="${esc(x.nome)}"><input data-k="series" placeholder="Séries" value="${esc(x.series)}"><input data-k="reps" placeholder="Reps" value="${esc(x.reps)}"><input data-k="carga" placeholder="Carga" value="${esc(x.carga)}"><input data-k="descanso" placeholder="Desc." value="${esc(x.descanso)}"><input class="dc" data-k="dica" placeholder="Dica (opcional)" value="${esc(x.dica)}"><button type="button" class="btn sm ghost" title="Remover" onclick="this.parentElement.remove()">✕</button></div>`;
 function addEx(){ $('#exs').insertAdjacentHTML('beforeend',linhaEx()); const l=$('#exs').lastElementChild.querySelector('input'); l&&l.focus(); }
 function editarTreino(id){
   const letra='ABCDEFG'[S.treinos.length]||'';
   const t=id?S.treinos.find(x=>x.id===id):{nome:'Treino '+letra,exercicios:[{},{},{},{}]};
   const m=abrirModal(`<h2>${id?'Editar':'Novo'} treino — ${esc(S.aluno.nome)}</h2><form>
     <div class="fg"><div><label>Nome do treino *</label><input name="nome" required value="${esc(t.nome)}" placeholder="Treino A — Peito e Tríceps"></div><div><label>Dias da semana</label><input name="dias" value="${esc(t.dias)}" placeholder="Seg / Qui"></div></div>
-    <div class="ex exhead sub" style="margin:16px 0 4px;font-size:11.5px"><span>Exercício</span><span>Séries</span><span>Reps</span><span>Carga (kg)</span><span>Descanso (s)</span><span></span></div>
+    <div class="ex exhead sub" style="margin:16px 0 4px;font-size:11.5px"><span>Exercício</span><span>Séries</span><span>Reps</span><span>Carga (kg)</span><span>Descanso (s)</span><span>Dica de execução</span><span></span></div>
     <div id="exs" style="margin-top:8px">${(t.exercicios||[]).map(linhaEx).join('')}</div>
     <button type="button" class="btn ghost sm" onclick="addEx()">+ Exercício</button>
     <div style="margin-top:14px"><label>Observações</label><textarea name="obs" rows="2" placeholder="Ex.: aquecer 10 min na esteira">${esc(t.obs)}</textarea></div>
@@ -605,6 +737,203 @@ async function copiarTreino(id){
   onSubmit(m,async d=>{ const {id:_,...doc}=t; await Store.add(P('treinos'),{...doc,alunoId:d.alvo,atualizadoEm:hoje()}); fecharModal(); toast('Treino copiado!'); });
 }
 
+/* ======================= INTELIGÊNCIA ARTIFICIAL (Google Gemini) ======================= */
+function lerJSON(t){ t=String(t||''); try{ return JSON.parse(t); }catch(e){} const a=t.indexOf('{'), b=t.lastIndexOf('}'); if(a>=0&&b>a){ try{ return JSON.parse(t.slice(a,b+1)); }catch(e){} } return null; }
+const iaBloqueada=()=>{ if(S.acad&&S.acad.iaLiberada===false){ toast('A IA não está incluída no plano desta academia. Fale com o suporte.',1); return true; } return false; };
+// Retorna o JSON da IA, ou null no modo demonstração sem chave (usa o gerador de exemplo)
+async function chamarIA(prompt){
+  const cfg=await Store.get('config','ia');
+  if(!cfg||!cfg.chave){ if(MODE==='demo') return null; throw new Error('A IA ainda não foi ativada. Fale com o suporte do sistema.'); }
+  let r;
+  try{
+    r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.modelo||'gemini-flash-latest')}:generateContent`,{
+      method:'POST', headers:{'Content-Type':'application/json','x-goog-api-key':cfg.chave},
+      body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:0.7}})});
+  }catch(e){ throw new Error('Não foi possível falar com a IA. Verifique a internet.'); }
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){
+    const msg=(j.error&&j.error.message)||'';
+    if(r.status===429) throw new Error('Limite de uso da IA atingido. Tente de novo em 1 minuto.');
+    if(/API key not valid|API_KEY_INVALID/i.test(msg)) throw new Error('Chave da IA inválida. Confira nas Configurações do dono do sistema.');
+    if(r.status===403) throw new Error('A chave da IA bloqueou este site. Confira as restrições da chave no Google.');
+    if(r.status===404) throw new Error('Modelo de IA não encontrado. Use "gemini-flash-latest" nas Configurações.');
+    throw new Error('Erro da IA: '+(msg||r.status));
+  }
+  const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+  const res=lerJSON(parts.filter(p=>!p.thought).map(p=>p.text||'').join(''));
+  if(!res) throw new Error('A IA respondeu num formato inesperado. Tente de novo.');
+  if(S.acad&&S.perfil.papel!=='superadmin'){ try{ S.acad.iaUsos=(S.acad.iaUsos||0)+1; await Store.set('academias',S.acad.id,{iaUsos:S.acad.iaUsos}); }catch(e){} }
+  return res;
+}
+// Ficha do aluno em texto para a IA (sem nome, telefone ou e-mail)
+function fichaTexto(a,md){
+  const n=a.anamnese||{}, u=md[md.length-1], c=u?composicao(u,a.sexo):{}, L=[];
+  const medTxt=m=>CAMPOS.filter(([k])=>!isNaN(num(m[k]))).map(([k,t,un])=>`${t} ${fmtN(m[k])}${un}`).join(', ')+(m.pa?`, PA ${m.pa}`:'');
+  L.push(`Sexo: ${a.sexo||'não informado'}`,`Idade: ${a.nascimento?idade(a.nascimento)+' anos':'não informada'}`,`Objetivo: ${a.objetivo||'-'}`);
+  if(a.anamnese){
+    L.push(`Nível: ${n.nivel}`,`Disponibilidade: ${n.diasSemana} dias/semana, ${n.tempo} por treino`,`Rotina no trabalho: ${n.rotina}`,`Experiência: ${n.experiencia||'-'}`,`Gosta de: ${n.gosta||'-'}`,`Não quer fazer: ${n.evitar||'-'}`,
+      `Condições de saúde: ${[...(n.doencas||[]),n.outrasDoencas].filter(Boolean).join(', ')||'nenhuma'}`,`Medicamentos: ${n.medicamentos||'nenhum'}`,`Cirurgias: ${n.cirurgias||'nenhuma'}`,`Fumante: ${n.fumante}`,`Sono: ${n.sono}`,
+      `Dores/lesões: ${[...(n.regioes||[]),n.lesoes].filter(Boolean).join(' — ')||'nenhuma'}`,
+      `PAR-Q: ${(n.parq||[]).some(Boolean)?'POSITIVO em: '+PARQ.filter((_,i)=>n.parq[i]).join(' | '):'negativo'}`,`Liberação médica: ${n.liberacao}`,`Observações do instrutor: ${n.obsInstrutor||'-'}`);
+  } else L.push('Anamnese: não preenchida');
+  if(a.obs) L.push('Observações do cadastro: '+a.obs);
+  if(u){
+    L.push(`Última avaliação (${fmtD(u.data)}): ${medTxt(u)}`);
+    if(c.imc) L.push(`IMC ${fmtN(c.imc)} (${c.imcClass})`+(c.mg!=null?`, massa magra ${fmtN(c.mm)} kg`:'')+(c.rcq?`, RCQ ${c.rcq.toFixed(2)} (risco ${c.rcqRisco})`:''));
+    if(md.length>1) L.push(`Primeira avaliação (${fmtD(md[0].data)}): ${medTxt(md[0])}`);
+  } else L.push('Avaliação física: nenhuma');
+  const mt=a.metas||{}, ml=METAS.filter(([k])=>!isNaN(num(mt[k])));
+  if(ml.length) L.push('Metas: '+ml.map(([k,t,u])=>`${t} ${fmtN(mt[k])}${u}`).join(', '));
+  return L.join('\n');
+}
+function validarTreinoIA(r){
+  const s=v=>v==null?'':String(v).trim();
+  const treinos=(Array.isArray(r.treinos)?r.treinos:[]).map(t=>({nome:s(t.nome)||'Treino',dias:s(t.dias),obs:s(t.obs),
+    exercicios:(Array.isArray(t.exercicios)?t.exercicios:[]).map(x=>({nome:s(x.nome),series:s(x.series),reps:s(x.reps),carga:s(x.carga),descanso:s(x.descanso).replace(/\s*s(eg)?\.?$/i,''),dica:s(x.dica)})).filter(x=>x.nome)})).filter(t=>t.exercicios.length);
+  if(!treinos.length) throw new Error('A IA não devolveu exercícios. Tente de novo.');
+  return {analise:s(r.analise),alertas:(Array.isArray(r.alertas)?r.alertas:[]).map(s).filter(Boolean),treinos};
+}
+async function iaTreino(a,md,o){
+  const prompt=`Você é um profissional de educação física (CREF) experiente em musculação no Brasil. Leia a ficha do aluno e monte um programa de treino personalizado e SEGURO.
+
+FICHA DO ALUNO:
+${fichaTexto(a,md)}
+
+PEDIDO DO INSTRUTOR:
+- Divisão: ${o.divisao==='Automática'?'escolha a melhor para os dias e o nível':o.divisao}
+- Dias por semana: ${o.dias}
+- Tempo por treino: ${o.tempo}
+- Nível: ${o.nivel}${o.extra?`\n- Pedido extra: ${o.extra}`:''}
+
+REGRAS:
+- Respeite lesões, dores, doenças e o que o aluno não quer fazer; troque exercícios contraindicados por alternativas seguras.
+- Se houver PAR-Q positivo, doença cardiovascular, hipertensão, diabetes ou gestação: intensidade moderada e alerta de liberação/acompanhamento médico.
+- Use nomes de exercícios comuns nas academias brasileiras.
+- Ajuste o volume ao tempo disponível (cerca de 4 a 8 exercícios por treino) e ao nível.
+- Deixe "carga" vazia: o instrutor define na academia.
+- Séries e repetições coerentes com objetivo e nível. "descanso" em segundos, só o número.
+- "dica": orientação curta de execução ou segurança (até 12 palavras), quando útil.
+- Nomeie como "Treino A — Grupos musculares", "Treino B — ..." e sugira os dias (ex.: "Seg / Qui").
+- Se o objetivo for emagrecimento ou condicionamento, oriente o cardio em "obs".
+
+Responda SOMENTE com JSON válido, neste formato:
+{"analise":"2 a 4 frases sobre o perfil do aluno e a estratégia escolhida","alertas":["cuidados importantes"],"treinos":[{"nome":"Treino A — Peito e Tríceps","dias":"Seg / Qui","obs":"aquecimento e orientações","exercicios":[{"nome":"Supino reto com barra","series":"3","reps":"12","carga":"","descanso":"60","dica":"Escápulas encaixadas, descer até o peito"}]}]}`;
+  const r=await chamarIA(prompt);
+  return r?validarTreinoIA(r):gerarTreinoLocal(a,o);
+}
+// Gerador de exemplo (modo demonstração sem chave): respeita objetivo, nível e lesões básicas
+function gerarTreinoLocal(a,o){
+  const n=a.anamnese||{}, reg=n.regioes||[], obj=a.objetivo||'Condicionamento', niv=o.nivel, dias=parseInt(o.dias)||3;
+  const joelho=reg.includes('Joelho'), lombar=reg.includes('Lombar'), ombro=reg.includes('Ombro');
+  const sr=obj==='Hipertrofia'&&niv!=='Iniciante'?['4','8-12','75']:obj==='Emagrecimento'?['3','15','40']:['3','12','60'];
+  const E=(nome,dica='')=>({nome,series:sr[0],reps:sr[1],carga:'',descanso:sr[2],dica});
+  const G={peito:[E('Supino reto com barra','Escápulas encaixadas no banco'),E('Supino inclinado com halteres'),E('Crucifixo na máquina')],
+    costas:[E('Puxada frontal','Puxe com os cotovelos, peito aberto'),E('Remada baixa'),E('Remada unilateral')],
+    pernas:[E(joelho?'Leg press 45° (amplitude parcial)':lombar?'Agachamento no smith':'Agachamento livre',joelho?'Não passar de 90° no joelho':'Coluna neutra durante todo o movimento'),E(joelho?'Elevação pélvica':'Cadeira extensora'),E('Mesa flexora'),E(lombar?'Cadeira abdutora':'Stiff'),E('Panturrilha em pé')],
+    ombros:[E(ombro?'Elevação lateral (carga leve)':'Desenvolvimento com halteres',ombro?'Não passar da linha do ombro':''),E('Elevação frontal')],
+    biceps:[E('Rosca direta'),E('Rosca martelo')], triceps:[E('Tríceps no pulley'),E(ombro?'Tríceps corda':'Tríceps francês')],
+    core:[{nome:'Prancha',series:'3',reps:'30s',carga:'',descanso:'30',dica:'Abdômen contraído, quadril alinhado'},E(lombar?'Abdominal infra (amplitude curta)':'Abdominal supra')]};
+  const dv=o.divisao!=='Automática'?o.divisao:(dias<=2||(niv==='Iniciante'&&dias<=3))?'Full body':dias===3?'ABC':dias===4?'ABCD':'ABCDE';
+  const PL={'Full body':[['Corpo inteiro',[G.pernas[0],G.peito[0],G.costas[0],G.ombros[0],G.pernas[2],G.core[0]]]],
+    AB:[['Superiores',[G.peito[0],G.peito[1],G.costas[0],G.costas[1],G.ombros[0],G.biceps[0],G.triceps[0]]],['Inferiores e Core',[...G.pernas,...G.core]]],
+    ABC:[['Peito, Ombros e Tríceps',[...G.peito,G.ombros[0],...G.triceps]],['Costas e Bíceps',[...G.costas,...G.biceps]],['Pernas e Core',[...G.pernas,G.core[0]]]],
+    ABCD:[['Peito e Tríceps',[...G.peito,...G.triceps]],['Costas e Bíceps',[...G.costas,...G.biceps]],['Pernas',G.pernas],['Ombros e Core',[...G.ombros,...G.core]]],
+    ABCDE:[['Peito',[...G.peito,E('Crossover')]],['Costas',[...G.costas,E('Pulldown')]],['Pernas',G.pernas],['Ombros',[...G.ombros,E('Encolhimento')]],['Braços e Core',[...G.biceps,...G.triceps,G.core[0]]]]};
+  const lst=PL[dv]||PL.ABC, DS={2:['Seg','Qui'],3:['Seg','Qua','Sex'],4:['Seg','Ter','Qui','Sex'],5:['Seg','Ter','Qua','Qui','Sex'],6:['Seg','Ter','Qua','Qui','Sex','Sáb']}[Math.min(6,Math.max(2,dias))];
+  const treinos=lst.map(([g,ex],i)=>({nome:(lst.length===1?'Treino Único':'Treino '+'ABCDE'[i])+' — '+g,dias:'',obs:obj==='Emagrecimento'?'Aquecer 5 min e finalizar com 20 min de cardio moderado.':'Aquecer 5 a 10 min antes de começar.',exercicios:ex.map(x=>({...x}))}));
+  DS.forEach((d,i)=>{ const t=treinos[i%treinos.length]; t.dias=t.dias?t.dias+' / '+d:d; });
+  const al=[];
+  if((n.parq||[]).some(Boolean)) al.push('PAR-Q positivo: exigir liberação médica e manter intensidade moderada.');
+  if((n.doencas||[]).length) al.push('Condições de saúde: '+n.doencas.join(', ')+'. Monitorar sinais durante o treino.');
+  if(reg.length) al.push('Dor/lesão em: '+reg.join(', ')+'. Exercícios adaptados; observar desconforto.');
+  if(!a.anamnese) al.push('Anamnese não preenchida: o treino foi montado só com o objetivo do aluno.');
+  return {simulado:true,analise:`Programa ${dv} para ${dias} dia(s) por semana, nível ${niv.toLowerCase()}, com foco em ${obj.toLowerCase()}.`,alertas:al,treinos};
+}
+function gerarTreinoIA(){
+  if(iaBloqueada()) return;
+  const a=S.aluno, n=a.anamnese||{};
+  const m=abrirModal(`<h2>✨ Gerar treino com IA</h2><p class="sub" style="margin-bottom:14px">A IA lê a ficha de <b>${esc(a.nome)}</b> — anamnese, lesões, avaliação física e metas — e monta a divisão de treino. Você revisa antes de salvar.</p>
+  ${!a.anamnese?`<div class="card aviso" style="padding:10px 14px">📋 A anamnese ainda não foi preenchida. Com ela, a IA respeita lesões e condições de saúde.</div>`:''}
+  <form><div class="fg">
+    <div><label>Divisão</label><select name="divisao">${opts(['Automática','Full body','AB','ABC','ABCD','ABCDE'])}</select></div>
+    <div><label>Dias por semana</label><select name="dias">${opts(['2','3','4','5','6'],String(n.diasSemana||3))}</select></div>
+    <div><label>Tempo por treino</label><select name="tempo">${opts(['30 min','45 min','60 min','75 min','90 min'],n.tempo||'60 min')}</select></div>
+    <div><label>Nível</label><select name="nivel">${opts(['Iniciante','Intermediário','Avançado'],n.nivel||'Iniciante')}</select></div>
+    <div class="full"><label>Pedido extra para a IA (opcional)</label><input name="extra" placeholder="Ex.: foco em glúteos, só máquinas, incluir 15 min de esteira"></div>
+  </div>
+  ${S.treinos.length?`<label style="display:flex;gap:8px;align-items:center;margin-top:12px;color:var(--txt);font-size:13px"><input type="checkbox" name="substituir" checked style="width:auto"> Substituir os ${S.treinos.length} treino(s) atuais ao salvar</label>`:''}
+  ${rodapeModal('✨ Gerar treino')}</form>`);
+  onSubmit(m,async d=>{
+    m.querySelector('button.p').innerHTML='<span class="spin"></span> Lendo a ficha e montando o treino...';
+    S.iaOpt=d;
+    const md=(await Store.list(P('medidas'),['alunoId',a.id])).sort(porData);
+    mostrarTreinoIA(await iaTreino(a,md,d));
+  });
+}
+async function regenerarIA(btn){
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Gerando...';
+  try{ const md=(await Store.list(P('medidas'),['alunoId',S.aluno.id])).sort(porData); mostrarTreinoIA(await iaTreino(S.aluno,md,S.iaOpt)); }
+  catch(e){ toast(erroAuth(e),1); if(btn.isConnected){ btn.disabled=false; btn.textContent='↻ Gerar outro'; } }
+}
+function mostrarTreinoIA(res){
+  const o=S.iaOpt||{};
+  const m=abrirModal(`<h2>✨ Treino sugerido ${res.simulado?'(exemplo)':'pela IA'}</h2>
+  ${res.simulado?'<div class="card aviso" style="padding:10px 14px">Modo demonstração: treino de exemplo. Com a chave do Gemini configurada, a IA de verdade lê a ficha e monta o treino.</div>':''}
+  ${res.analise?`<div class="card ia" style="margin-bottom:12px;padding:14px"><b>Análise</b><p style="margin-top:4px">${esc(res.analise)}</p></div>`:''}
+  ${res.alertas.length?`<div class="alerta">⚠️ ${res.alertas.map(esc).join('<br>')}</div>`:''}
+  <div style="display:grid;gap:10px">${res.treinos.map(t=>`<div class="card" style="padding:14px"><b>${esc(t.nome)}</b> <span class="sub">${esc(t.dias||'')}</span>
+    ${t.exercicios.map((x,i)=>`<div class="li" style="padding:6px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}${x.dica?' · 💡 '+esc(x.dica):''}</div></div></div>`).join('')}
+    ${t.obs?`<p class="sub" style="margin-top:6px">📝 ${esc(t.obs)}</p>`:''}</div>`).join('')}</div>
+  <p class="sub" style="margin-top:10px">Revise antes de salvar. Depois dá para editar cada treino e definir as cargas.</p>
+  <div class="mfoot"><button class="btn ghost" onclick="fecharModal()">Descartar</button><button class="btn ghost" onclick="regenerarIA(this)">↻ Gerar outro</button><button class="btn p" id="btSalvarIA">Salvar ${res.treinos.length} treino(s)</button></div>`,true);
+  m.querySelector('#btSalvarIA').onclick=async e=>{
+    const b=e.target; b.disabled=true; b.textContent='Salvando...';
+    try{
+      if(o.substituir) for(const t of S.treinos) await Store.del(P('treinos'),t.id);
+      for(const t of res.treinos) await Store.add(P('treinos'),{alunoId:S.aluno.id,nome:t.nome,dias:t.dias||'',obs:t.obs||'',exercicios:t.exercicios,atualizadoEm:hoje(),ia:true});
+      toast('Treinos salvos! Agora é só ajustar as cargas.'); S.refresh();
+    }catch(err){ toast(erroAuth(err),1); b.disabled=false; b.textContent='Salvar'; }
+  };
+}
+async function analisarEvolucao(btn){
+  if(iaBloqueada()) return;
+  if(!S.medidas.length) return toast('Registre pelo menos uma avaliação física primeiro.',1);
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Analisando...';
+  try{
+    const hist=S.medidas.map(m=>`${fmtD(m.data)}: `+CAMPOS.filter(([k])=>!isNaN(num(m[k]))).map(([k,t,u])=>`${t} ${fmtN(m[k])}${u}`).join(', ')).join('\n');
+    const prompt=`Você é um profissional de educação física. Analise a ficha e a evolução do aluno abaixo e escreva um retorno claro, honesto e motivador, em português do Brasil.
+
+FICHA DO ALUNO:
+${fichaTexto(S.aluno,S.medidas)}
+
+HISTÓRICO DE AVALIAÇÕES:
+${hist}
+
+Responda SOMENTE com JSON: {"resumo":"2 a 3 frases","positivos":["..."],"atencao":["..."],"sugestoes":["ajustes práticos de treino e hábitos"],"mensagemAluno":"mensagem curta e motivadora para o aluno, sem citar doenças"}`;
+    let r=await chamarIA(prompt);
+    if(!r) r=analiseLocal();
+    mostrarAnalise(r);
+  }catch(e){ toast(erroAuth(e),1); }
+  finally{ if(btn.isConnected){ btn.disabled=false; btn.textContent='✨ Análise da IA'; } }
+}
+function analiseLocal(){
+  const md=S.medidas, a=md[0], b=md[md.length-1], pos=[], at=[];
+  [['peso','Peso','kg'],['gordura','% de gordura','%'],['cintura','Cintura','cm']].forEach(([k,t,u])=>{ if(md.length>1&&!isNaN(num(a[k]))&&!isNaN(num(b[k]))){ const d=num(b[k])-num(a[k]); (d<0?pos:at).push(`${t}: ${d>0?'+':''}${fmtN(d)} ${u} desde ${fmtD(a.data)}`); } });
+  if(md.length>1&&!isNaN(num(a.bracoD))&&!isNaN(num(b.bracoD))&&num(b.bracoD)>num(a.bracoD)) pos.push(`Braço: +${fmtN(num(b.bracoD)-num(a.bracoD))} cm`);
+  if(!pos.length&&!at.length) at.push('Faça uma nova avaliação para comparar a evolução.');
+  return {simulado:true,resumo:md.length>1?`Comparando ${md.length} avaliações, entre ${fmtD(a.data)} e ${fmtD(b.data)}.`:'Há só uma avaliação registrada; a evolução aparece a partir da segunda.',positivos:pos,atencao:at,sugestoes:['Manter a frequência semanal combinada.','Reavaliar a cada 30 a 45 dias.'],mensagemAluno:'Seu esforço está aparecendo nos números! Continue firme nos treinos que a próxima avaliação vai mostrar ainda mais resultado. 💪'};
+}
+function mostrarAnalise(r){
+  const a=S.aluno, lista=(t,l)=>Array.isArray(l)&&l.length?`<div style="margin-top:12px"><b>${t}</b>${l.map(x=>`<div class="sub" style="margin-top:4px">• ${esc(x)}</div>`).join('')}</div>`:'';
+  const msg=`Olá, ${primeiroNome(a.nome)}! ${r.mensagemAluno||''}`;
+  abrirModal(`<h2>✨ Análise da evolução ${r.simulado?'(exemplo)':''}</h2>
+  ${r.simulado?'<div class="card aviso" style="padding:10px 14px">Modo demonstração: análise simplificada. Com a chave do Gemini, a IA lê a ficha completa.</div>':''}
+  <div class="card ia" style="padding:14px">${esc(r.resumo||'')}</div>
+  ${lista('✅ Pontos positivos',r.positivos)}${lista('⚠️ Atenção',r.atencao)}${lista('💡 Sugestões',r.sugestoes)}
+  ${r.mensagemAluno?`<div style="margin-top:14px"><label>Mensagem para o aluno</label><div class="pix" style="white-space:pre-wrap">${esc(msg)}</div></div>`:''}
+  <div class="mfoot"><button class="btn ghost" onclick="fecharModal()">Fechar</button>${r.mensagemAluno&&a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,msg)}">📲 Enviar ao aluno</a>`:''}</div>`);
+}
+
 /* ---------- medidas e metas ---------- */
 const imc=m=>{ const p=num(m.peso); let h=num(m.altura); if(!p||!h) return ''; if(h>3) h=h/100; return fmtN(p/(h*h)); };
 function blocoMetas(md,metas){
@@ -619,7 +948,26 @@ function blocoMetas(md,metas){
 function tabelaMedidas(md,del){
   if(!md.length) return '<div class="empty">Nenhuma avaliação registrada.</div>';
   const cols=CAMPOS.filter(([k])=>k!=='altura'&&md.some(x=>!isNaN(num(x[k]))));
-  return `<table><thead><tr><th>Data</th>${cols.map(c=>`<th>${c[1]}</th>`).join('')}<th>IMC</th>${del?'<th></th>':''}</tr></thead><tbody>${[...md].reverse().map(x=>`<tr><td>${fmtD(x.data)}</td>${cols.map(([k])=>`<td>${isNaN(num(x[k]))?'—':fmtN(x[k])}</td>`).join('')}<td>${imc(x)||'—'}</td>${del?`<td style="text-align:right"><button class="btn sm ghost" onclick="excluirMedida('${x.id}')">🗑</button></td>`:''}</tr>`).join('')}</tbody></table>`;
+  const pa=md.some(x=>x.pa);
+  return `<table><thead><tr><th>Data</th>${cols.map(c=>`<th>${c[1]}</th>`).join('')}${pa?'<th>PA</th>':''}<th>IMC</th>${del?'<th></th>':''}</tr></thead><tbody>${[...md].reverse().map(x=>`<tr><td>${fmtD(x.data)}${x.obs?` <span title="${esc(x.obs)}">📝</span>`:''}</td>${cols.map(([k])=>`<td>${isNaN(num(x[k]))?'—':fmtN(x[k])}</td>`).join('')}${pa?`<td>${esc(x.pa||'—')}</td>`:''}<td>${imc(x)||'—'}</td>${del?`<td style="text-align:right"><button class="btn sm ghost" onclick="excluirMedida('${x.id}')">🗑</button></td>`:''}</tr>`).join('')}</tbody></table>`;
+}
+function blocoComposicao(md,sexo){
+  const u=md[md.length-1]; if(!u) return '<p class="sub">Nenhuma avaliação ainda. Clique em “+ Nova avaliação”.</p>';
+  const c=composicao(u,sexo), it=[];
+  if(c.imc) it.push(['IMC',fmtN(c.imc),c.imcClass]);
+  if(!isNaN(num(u.gordura))) it.push(['% Gordura',fmtN(u.gordura)+'%','']);
+  if(c.mg!=null){ it.push(['Massa gorda',fmtN(c.mg)+' kg','']); it.push(['Massa magra',fmtN(c.mm)+' kg','']); }
+  if(c.rcq) it.push(['Cintura/quadril',c.rcq.toFixed(2),'Risco '+c.rcqRisco.toLowerCase()]);
+  if(u.pa) it.push(['Pressão',esc(u.pa),'']);
+  if(!isNaN(num(u.fc))) it.push(['FC repouso',fmtN(u.fc)+' bpm','']);
+  if(!it.length) return `<p class="sub">Avaliação de ${fmtD(u.data)} sem peso/altura para calcular a composição.</p>`;
+  return `<p class="sub" style="margin-bottom:10px">Última avaliação: ${fmtD(u.data)}${sexo?'':' · informe o sexo em Dados para o risco da RCQ'}</p><div class="mini">${it.map(([l,v,s])=>`<div><div class="sub">${l}</div><b style="font-size:17px">${v}</b>${s?`<div class="sub">${s}</div>`:''}</div>`).join('')}</div>`;
+}
+function blocoDiferencas(md){
+  if(md.length<2) return '';
+  const a=md[0], b=md[md.length-1], l=CAMPOS.filter(([k])=>!['altura','fc'].includes(k)&&!isNaN(num(a[k]))&&!isNaN(num(b[k])));
+  if(!l.length) return '';
+  return `<div class="card" style="margin-top:14px"><h2>↕️ Evolução desde a 1ª avaliação <span class="sub" style="font-weight:500">(${fmtD(a.data)} → ${fmtD(b.data)})</span></h2><div class="mini">${l.map(([k,t,u])=>{const d=num(b[k])-num(a[k]);return `<div><div class="sub">${t}</div><b>${fmtN(b[k])} ${u}</b> <span style="color:${d===0?'var(--mut)':'var(--acc)'};font-size:12.5px;font-weight:600">${d>0?'+':''}${fmtN(d)}</span></div>`}).join('')}</div></div>`;
 }
 const selCampo=()=>`<select id="selCampo" style="width:auto;padding:6px 10px" onchange="desenharEvol()">${CAMPOS.filter(c=>c[0]!=='altura').map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select>`;
 function desenharEvol(){
@@ -633,18 +981,29 @@ function desenharEvol(){
 }
 ABAS.medidas=async(el,a)=>{
   const md=(await Store.list(P('medidas'),['alunoId',a.id])).sort(porData); S.medidas=md; S.metas=a.metas||{};
-  el.innerHTML=`<div class="row" style="justify-content:flex-end;margin-bottom:14px"><button class="btn ghost sm" onclick="editarMetas()">🎯 Definir metas</button><button class="btn p sm" onclick="novaMedida()">+ Nova avaliação</button></div>
-  <div class="grid2"><div class="card"><h2>🎯 Metas do aluno</h2>${blocoMetas(md,S.metas)}<p class="sub" style="margin-top:6px">Metas são opcionais — defina só as que fizerem sentido para o aluno.</p></div>
-  <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">📈 Evolução</h2>${selCampo()}</div><div class="chartbox"><canvas id="cEvol"></canvas></div></div></div>
+  el.innerHTML=`<div class="row" style="justify-content:flex-end;margin-bottom:14px"><button class="btn iab sm" onclick="analisarEvolucao(this)">✨ Análise da IA</button><button class="btn ghost sm" onclick="editarMetas()">🎯 Definir metas</button><button class="btn p sm" onclick="novaMedida()">+ Nova avaliação</button></div>
+  <div class="grid2"><div class="card"><h2>🧍 Composição corporal</h2>${blocoComposicao(md,a.sexo)}</div>
+  <div class="card"><h2>🎯 Metas do aluno</h2>${blocoMetas(md,S.metas)}<p class="sub" style="margin-top:6px">Metas são opcionais — defina só as que fizerem sentido para o aluno.</p></div></div>
+  ${md.length?`<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">📈 Evolução</h2>${selCampo()}</div><div class="chartbox"><canvas id="cEvol"></canvas></div></div>`:''}
+  ${blocoDiferencas(md)}
   <div class="card tbl" style="margin-top:14px;padding:6px 10px">${tabelaMedidas(md,true)}</div>`;
-  desenharEvol();
+  if(md.length) desenharEvol();
 };
 function novaMedida(){
   const ult=S.medidas[S.medidas.length-1]||{};
-  const m=abrirModal(`<h2>Nova avaliação — ${esc(S.aluno.nome)}</h2><form><div class="fg"><div><label>Data</label><input type="date" name="data" value="${hoje()}" required></div>
-  ${CAMPOS.map(([k,t,u])=>`<div><label>${t} (${u})</label><input type="number" step="any" min="0" name="${k}" value="${k==='altura'&&ult.altura?ult.altura:''}" placeholder="${ult[k]!==undefined?'anterior: '+fmtN(ult[k]):''}"></div>`).join('')}
-  </div>${rodapeModal('Salvar avaliação')}</form>`,true);
-  onSubmit(m,async d=>{ const doc={alunoId:S.aluno.id,data:d.data}; CAMPOS.forEach(([k])=>{ const v=num(d[k]); if(!isNaN(v)) doc[k]=v; }); if(Object.keys(doc).length<3) throw new Error('Preencha pelo menos uma medida.'); await Store.add(P('medidas'),doc); toast('Avaliação salva!'); S.refresh(); });
+  const campo=([k,t,u])=>`<div><label>${t} (${u})</label><input type="number" step="any" min="0" name="${k}" value="${k==='altura'&&ult.altura?ult.altura:''}" placeholder="${!isNaN(num(ult[k]))?'anterior: '+fmtN(ult[k]):''}"></div>`;
+  const m=abrirModal(`<h2>Nova avaliação física — ${esc(S.aluno.nome)}</h2><form>
+  <div class="fg"><div><label>Data da avaliação</label><input type="date" name="data" value="${hoje()}" required></div></div>
+  ${GRUPOS.map(([g,ks])=>`<div class="sec">${g}</div><div class="fg">${ks.map(k=>campo(CAMPOS.find(c=>c[0]===k))).join('')}${g==='Sinais vitais'?`<div><label>Pressão arterial</label><input name="pa" placeholder="${ult.pa?'anterior: '+esc(ult.pa):'Ex.: 12/8'}"></div>`:''}</div>`).join('')}
+  <div style="margin-top:14px"><label>Observações da avaliação</label><textarea name="obs" rows="2"></textarea></div>
+  ${rodapeModal('Salvar avaliação')}</form>`,true);
+  onSubmit(m,async d=>{
+    const doc={alunoId:S.aluno.id,data:d.data};
+    CAMPOS.forEach(([k])=>{ const v=num(d[k]); if(!isNaN(v)) doc[k]=v; });
+    if(d.pa.trim()) doc.pa=d.pa.trim(); if(d.obs.trim()) doc.obs=d.obs.trim();
+    if(Object.keys(doc).length<3) throw new Error('Preencha pelo menos uma medida.');
+    await Store.add(P('medidas'),doc); toast('Avaliação salva!'); S.refresh();
+  });
 }
 async function excluirMedida(id){ if(!confirm('Excluir esta avaliação?')) return; await Store.del(P('medidas'),id); toast('Avaliação excluída.'); S.refresh(); }
 function editarMetas(){
@@ -767,7 +1126,7 @@ VIEWS.aTreinos=async(el,i)=>{
   const t=treinos[i], f=S.feitos[t.id]||(S.feitos[t.id]=[]), n=(t.exercicios||[]).length;
   el.innerHTML=kpis+`<div class="chips">${treinos.map((x,k)=>`<a class="chip ${k===i?'on':''}" onclick="go('aTreinos',${k})">${esc(rotuloCurto(x.nome,k))}</a>`).join('')}</div>
   <div class="card" style="margin-bottom:12px"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub">${esc(t.dias||'')}${t.dias?' · ':''}${n} exercícios${regs[0]&&regs[0].treinoId!==t.id&&i===((treinos.findIndex(x=>x.id===regs[0].treinoId)+1)%treinos.length)?' · <b style="color:var(--acc)">próximo da sequência</b>':''}</p>${t.obs?`<p class="sub" style="margin-top:6px">📝 ${esc(t.obs)}</p>`:''}<div class="prog" style="margin-top:12px"><i id="pg" style="width:${n?f.length/n*100:0}%"></i></div><p class="sub" id="pgt" style="margin-top:4px;font-size:12px">${f.length} de ${n} feitos</p></div>
-  ${(t.exercicios||[]).map((x,k)=>`<div class="exc ${f.includes(k)?'ok':''}" onclick="marcarEx('${t.id}',${k},this,${n})"><div class="ck">${f.includes(k)?'✓':k+1}</div><div><div class="nm" style="font-weight:600">${esc(x.nome)}</div><div class="sub">${esc(descEx(x))}</div></div></div>`).join('')}
+  ${(t.exercicios||[]).map((x,k)=>`<div class="exc ${f.includes(k)?'ok':''}" onclick="marcarEx('${t.id}',${k},this,${n})"><div class="ck">${f.includes(k)?'✓':k+1}</div><div><div class="nm" style="font-weight:600">${esc(x.nome)}</div><div class="sub">${esc(descEx(x))}</div>${x.dica?`<div class="sub" style="font-size:12px;margin-top:2px">💡 ${esc(x.dica)}</div>`:''}</div></div>`).join('')}
   <button class="btn p" style="width:100%;justify-content:center;padding:14px;margin-top:8px" onclick="concluirTreino('${t.id}',${i})">✅ Concluir treino</button>`;
 };
 function marcarEx(tid,k,el,n){
@@ -785,10 +1144,11 @@ async function concluirTreino(tid,i){
 VIEWS.aEvolucao=async el=>{
   const {aluno,medidas}=S.al, u=medidas[medidas.length-1];
   S.medidas=medidas; S.metas=aluno.metas||{};
-  el.innerHTML=`${u?`<p class="sub" style="margin-bottom:8px">Última avaliação: ${fmtD(u.data)}</p><div class="cards" style="grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">${kpi('Peso',u.peso?fmtN(u.peso)+'kg':'—')}${kpi('IMC',imc(u)||'—')}${kpi('Gordura',u.gordura?fmtN(u.gordura)+'%':'—')}</div>`:''}
+  el.innerHTML=`${u?`<div class="card" style="margin-bottom:12px"><h2>🧍 Meu corpo hoje</h2>${!isNaN(num(u.peso))?`<p style="margin:-4px 0 10px"><b style="font-size:22px">${fmtN(u.peso)} kg</b></p>`:''}${blocoComposicao(medidas,aluno.sexo)}</div>`:''}
   <div class="card" style="margin-bottom:12px"><h2>🎯 Minhas metas</h2>${blocoMetas(medidas,S.metas)}</div>
   ${medidas.length?`<div class="card" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">📈 Evolução</h2>${selCampo()}</div><div class="chartbox"><canvas id="cEvol"></canvas></div></div>
-  <div class="card tbl" style="padding:6px 10px">${tabelaMedidas(medidas,false)}</div>`:'<div class="card empty">Nenhuma avaliação física registrada ainda. Peça ao seu instrutor!</div>'}`;
+  ${blocoDiferencas(medidas)}
+  <div class="card tbl" style="padding:6px 10px;margin-top:12px">${tabelaMedidas(medidas,false)}</div>`:'<div class="card empty">Nenhuma avaliação física registrada ainda. Peça ao seu instrutor!</div>'}`;
   if(medidas.length) desenharEvol();
 };
 VIEWS.aPagamentos=async el=>{
