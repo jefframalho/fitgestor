@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FitGestor — Gestão de Academias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0b0d12;--bg2:#12151d;--card:#171b25;--line:#252b38;--txt:#e9ecf3;--mut:#8b93a7;--acc:#c6f432;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--txt);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:500}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:600;background:var(--line);color:var(--txt);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.btn:hover{filter:brightness(1.15)}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn.p{background:var(--acc);color:#111}
+.btn.g{background:#25d366;color:#05351a}
+.btn.d{background:#3a1d22;color:var(--bad)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
+.shell{display:flex;min-height:100vh}
+.side{width:240px;background:var(--bg2);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.5px;display:flex;align-items:center;gap:8px;padding:0 6px 16px}
+.logo b{color:var(--acc)}
+.logo .ic{width:32px;height:32px;border-radius:9px;background:var(--acc);display:grid;place-items:center;font-size:17px}
+.acad-name{font-size:12px;color:var(--mut);padding:0 6px 14px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--mut);font-weight:500;cursor:pointer;margin-bottom:2px}
+.nav a:hover{background:var(--card);color:var(--txt)}
+.nav a.on{background:var(--card);color:var(--acc)}
+.side .foot{margin-top:auto;font-size:12px;color:var(--mut);padding:10px 6px;border-top:1px solid var(--line);word-break:break-all}
+.main{flex:1;padding:28px;max-width:1200px;width:100%;min-width:0}
+h1{font-size:24px;font-weight:800;letter-spacing:-.5px}
+h2{font-size:16px;font-weight:700;margin-bottom:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.sub{color:var(--mut);font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.kpi .v{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-top:4px}
+.kpi .l{color:var(--mut);font-size:12.5px;font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);font-weight:600;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer} tr.click:hover td{background:#ffffff06}
+.tbl{overflow-x:auto}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.b-pago{background:#10392b;color:var(--ok)}.b-pendente{background:#3b3214;color:var(--warn)}.b-atrasado,.b-bloq{background:#3d1b1f;color:var(--bad)}.b-inativo{background:#252b38;color:var(--mut)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.fg .full{grid-column:1/-1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tabs a{padding:10px 14px;color:var(--mut);cursor:pointer;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs a.on{color:var(--acc);border-color:var(--acc)}
+.overlay{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:50;padding:16px;overflow-y:auto}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto}
+.modal.wide{max-width:780px}
+.modal h2{font-size:18px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--acc);color:#111;padding:11px 18px;border-radius:10px;font-weight:600;z-index:99;box-shadow:0 8px 30px #0008;max-width:90vw;text-align:center}
+.toast.err{background:var(--bad);color:#fff}
+.empty{color:var(--mut);text-align:center;padding:30px}
+.av{width:36px;height:36px;border-radius:50%;background:#2a3142;display:grid;place-items:center;font-weight:700;color:var(--acc);flex-shrink:0;font-size:13px}
+.ex{display:grid;grid-template-columns:2.4fr .7fr .7fr .8fr .8fr 34px;gap:6px;margin-bottom:6px}
+.prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 0,#1c2410 0,var(--bg) 60%)}
+.lbox{width:100%;max-width:420px}
+.demo{background:#1a2110;border:1px solid #3b4d14;border-radius:12px;padding:14px;margin-top:16px;font-size:13px}
+.chartbox{height:250px;position:relative}
+.li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border:0}
+.pix{font-family:ui-monospace,monospace;background:var(--bg2);border:1px dashed var(--acc);padding:10px;border-radius:10px;word-break:break-all;font-size:13px}
+.ap{max-width:560px;margin:0 auto;padding:18px 16px 96px}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:20}
+.bnav a{flex:1;max-width:190px;text-align:center;padding:9px 0 12px;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer}
+.bnav a span{display:block;font-size:20px}
+.bnav a.on{color:var(--acc)}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px}
+.chip{padding:8px 15px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:600;cursor:pointer;white-space:nowrap;font-size:13px}
+.chip.on{background:var(--acc);color:#111;border-color:var(--acc)}
+.exc{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;user-select:none}
+.exc.ok{opacity:.55}.exc.ok .nm{text-decoration:line-through}
+.ck{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;flex-shrink:0;font-weight:800;font-size:13px}
+.exc.ok .ck{background:var(--acc);border-color:var(--acc);color:#111}
+.dbar{background:var(--warn);color:#111;text-align:center;font-size:12.5px;padding:6px 10px;font-weight:600}
+.aviso{border-color:var(--warn);margin-bottom:16px}
+@media(max-width:820px){
+ .shell{flex-direction:column}
+ .side{width:100%;height:auto;position:static;padding:12px;border-right:0;border-bottom:1px solid var(--line)}
+ .nav{display:flex;overflow-x:auto;gap:4px}.nav a{white-space:nowrap}
+ .side .foot,.acad-name{display:none}.logo{padding-bottom:10px}
+ .main{padding:16px}.grid2{grid-template-columns:1fr}
+ .ex{grid-template-columns:1fr 1fr 1fr;padding-bottom:8px;border-bottom:1px dashed var(--line)}.ex .n{grid-column:1/-1}.exhead{display:none}
+ h1{font-size:21px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =====================================================================
+   FitGestor — sistema para várias academias
+   CONFIGURAÇÃO: cole aqui a configuração do seu projeto Firebase.
+   Enquanto ficar null, o sistema roda em MODO DEMONSTRAÇÃO (dados só no navegador).
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA9WOrmD6h0MDL0G4gDsdQg-A2yG4E5L1o",
+  authDomain: "academias-d33fd.firebaseapp.com",
+  projectId: "academias-d33fd",
+  storageBucket: "academias-d33fd.firebasestorage.app",
+  messagingSenderId: "447392492522",
+  appId: "1:447392492522:web:218b201628228f547c2093"
+};
+/* Exemplo:
+const FIREBASE_CONFIG = {
+  apiKey: "AIza...",
+  authDomain: "fitgestor-xxxx.firebaseapp.com",
+  projectId: "fitgestor-xxxx",
+  storageBucket: "fitgestor-xxxx.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123"
+};
+*/
+const TOLERANCIA_DIAS = 5; // dias de atraso da academia antes de bloquear o acesso
+
+const MODE = FIREBASE_CONFIG ? 'firebase' : 'demo';
+let fdb = null, fauth = null, mem = null;
+const S = { perfil:null, acad:null, sis:{}, charts:[], refresh:()=>{} };
+
+/* ======================= utilitários ======================= */
+const $ = s => document.querySelector(s);
+const app = () => document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R = v => (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const num = v => (v===''||v==null) ? NaN : Number(String(v).replace(',','.'));
+const fmtN = n => Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
+const pad = n => String(n).padStart(2,'0');
+const isoDe = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hoje = () => isoDe(new Date());
+const fmtD = s => s ? s.split('-').reverse().join('/') : '—';
+const addDias = (iso,n) => { const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return isoDe(d); };
+const addMeses = (iso,n) => { const [y,m,d]=iso.split('-').map(Number); const ult=new Date(y,m-1+n+1,0).getDate(); return isoDe(new Date(y,m-1+n,Math.min(d,ult),12)); };
+const diasEntre = (a,b) => Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
+const mesAtual = () => hoje().slice(0,7);
+const mesAnterior = c => { const [y,m]=c.split('-').map(Number); const d=new Date(y,m-2,1); return d.getFullYear()+'-'+pad(d.getMonth()+1); };
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const nomeMes = c => c ? MESES[Number(c.slice(5,7))-1]+'/'+c.slice(0,4) : '';
+const clampDia = d => Math.min(28, Math.max(1, parseInt(d)||10));
+const vencDe = (comp,dia) => comp+'-'+pad(clampDia(dia));
+const soDig = s => String(s||'').replace(/\D/g,'');
+const wa = (tel,txt) => { let n=soDig(tel); if(n && !n.startsWith('55')) n='55'+n; return `https://wa.me/${n}?text=${encodeURIComponent(txt)}`; };
+const primeiroNome = n => String(n||'').trim().split(/\s+/)[0] || '';
+const ini = n => { const p=String(n||'?').trim().split(/\s+/); return esc(((p[0]||'')[0]||'')+(p.length>1?p[p.length-1][0]:'')).toUpperCase(); };
+const idade = n => { const d=new Date(n+'T12:00:00'), h=new Date(); let i=h.getFullYear()-d.getFullYear(); if(h.getMonth()<d.getMonth()||(h.getMonth()===d.getMonth()&&h.getDate()<d.getDate())) i--; return i; };
+const idx = l => Object.fromEntries(l.map(x=>[x.id,x]));
+const soma = (l,k='valor') => l.reduce((s,x)=>s+(Number(x[k])||0),0);
+const porNome = (a,b) => (a.nome||'').localeCompare(b.nome||'','pt-BR');
+const porData = (a,b) => (a.data||'').localeCompare(b.data||'');
+const clone = x => x==null ? x : JSON.parse(JSON.stringify(x));
+const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const urlPainel = () => location.href.split('#')[0].split('?')[0];
+const dataExtenso = () => new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+const gerarSenha = () => Array.from({length:8},()=>'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random()*31)]).join('');
+const opts = (list,sel) => (sel&&!list.includes(sel)?[...list,sel]:list).map(o=>`<option ${o===sel?'selected':''}>${esc(o)}</option>`).join('');
+const lerForm = f => Object.fromEntries(new FormData(f));
+const ss = { get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}}, del:k=>{try{sessionStorage.removeItem(k)}catch(e){}} };
+const P = sub => `academias/${S.acad.id}/${sub}`;
+const kpi = (l,v,ic,cor) => `<div class="card kpi"><div class="l">${ic||''} ${l}</div><div class="v" style="${cor?'color:'+cor:''}">${v}</div></div>`;
+const demoBar = () => MODE==='demo' ? `<div class="dbar">Modo demonstração — os dados ficam só neste navegador. Configure o Firebase para usar de verdade.</div>` : '';
+
+function toast(msg, err){ document.querySelectorAll('.toast').forEach(t=>t.remove()); const t=document.createElement('div'); t.className='toast'+(err?' err':''); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), err?4500:2600); }
+function abrirModal(html, wide){ fecharModal(); const o=document.createElement('div'); o.className='overlay'; o.innerHTML=`<div class="modal ${wide?'wide':''}">${html}</div>`; o.addEventListener('mousedown',e=>{ if(e.target===o) fecharModal(); }); document.body.appendChild(o); const f=o.querySelector('input:not([type=hidden])'); if(f) setTimeout(()=>f.focus(),50); return o.querySelector('.modal'); }
+function fecharModal(){ document.querySelectorAll('.overlay').forEach(o=>o.remove()); }
+const rodapeModal = txt => `<div class="mfoot"><button type="button" class="btn ghost" onclick="fecharModal()">Cancelar</button><button class="btn p">${txt}</button></div>`;
+function onSubmit(el, fn){ const f=el.querySelector('form'); f.onsubmit=async e=>{ e.preventDefault(); const b=f.querySelector('button.p'); if(b){ b.disabled=true; b.dataset.t=b.textContent; b.textContent='Salvando...'; } try{ await fn(lerForm(f), f); }catch(err){ console.error(err); toast(erroAuth(err),1); if(b&&b.isConnected){ b.disabled=false; b.textContent=b.dataset.t; } } }; }
+function copiar(v){ const ok=()=>toast('Copiado!'); if(navigator.clipboard&&window.isSecureContext){ navigator.clipboard.writeText(v).then(ok).catch(()=>fb()); } else fb(); function fb(){ const t=document.createElement('textarea'); t.value=v; document.body.appendChild(t); t.select(); try{document.execCommand('copy'); ok();}catch(e){toast('Não foi possível copiar',1)} t.remove(); } }
+function erroAuth(e){ const c=(e&&e.code)||''; if(/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return 'E-mail ou senha incorretos.'; if(c.includes('email-already-in-use')) return 'Este e-mail já tem cadastro.'; if(c.includes('weak-password')) return 'Senha fraca: use pelo menos 6 caracteres.'; if(c.includes('invalid-email')) return 'E-mail inválido.'; if(c.includes('too-many-requests')) return 'Muitas tentativas. Aguarde alguns minutos.'; if(c.includes('permission-denied')) return 'Sem permissão para esta ação.'; return (e&&e.message)||'Erro inesperado.'; }
+
+/* ======================= dados (Firebase ou demonstração) ======================= */
+const Store = {
+  async list(path, where){
+    if(MODE==='firebase'){ let q=fdb.collection(path); if(where) q=q.where(where[0],'==',where[1]); const s=await q.get(); return s.docs.map(d=>({id:d.id,...d.data()})); }
+    return Object.entries(mem.db[path]||{}).map(([id,d])=>({id,...clone(d)})).filter(d=>!where||d[where[0]]===where[1]);
+  },
+  async get(path,id){
+    if(MODE==='firebase'){ const d=await fdb.collection(path).doc(id).get(); return d.exists?{id:d.id,...d.data()}:null; }
+    const d=(mem.db[path]||{})[id]; return d?{id,...clone(d)}:null;
+  },
+  async add(path,data){
+    if(MODE==='firebase'){ const r=await fdb.collection(path).add(data); return r.id; }
+    const id=uid(); (mem.db[path]=mem.db[path]||{})[id]=clone(data); salvarDemo(); return id;
+  },
+  async set(path,id,data,merge=true){
+    if(MODE==='firebase'){ await fdb.collection(path).doc(id).set(data,{merge}); return; }
+    const c=(mem.db[path]=mem.db[path]||{}); c[id]=merge?{...(c[id]||{}),...clone(data)}:clone(data); salvarDemo();
+  },
+  async del(path,id){
+    if(MODE==='firebase'){ await fdb.collection(path).doc(id).delete(); return; }
+    if(mem.db[path]) delete mem.db[path][id]; salvarDemo();
+  }
+};
+const Auth = {
+  async login(email,senha){
+    email=String(email).trim().toLowerCase();
+    if(MODE==='firebase'){ const c=await fauth.signInWithEmailAndPassword(email,senha); return c.user.uid; }
+    const u=Object.entries(mem.users).find(([,u])=>u.email===email&&u.senha===senha);
+    if(!u) throw {code:'invalid-credential'}; ss.set('fg_uid',u[0]); return u[0];
+  },
+  async logout(){ S.perfil=null; S.acad=null; if(MODE==='firebase') await fauth.signOut(); else ss.del('fg_uid'); },
+  async criarUsuario(email,senha){
+    email=String(email).trim().toLowerCase();
+    if(MODE==='firebase'){ const sec=firebase.apps.find(a=>a.name==='sec')||firebase.initializeApp(FIREBASE_CONFIG,'sec'); const c=await sec.auth().createUserWithEmailAndPassword(email,senha); await sec.auth().signOut(); return c.user.uid; }
+    if(String(senha).length<6) throw {code:'weak-password'};
+    if(Object.values(mem.users).some(u=>u.email===email)) throw {code:'email-already-in-use'};
+    const id=uid(); mem.users[id]={email,senha}; salvarDemo(); return id;
+  },
+  async resetSenha(email){
+    if(MODE==='firebase'){ await fauth.sendPasswordResetEmail(String(email).trim()); return 'Enviamos um link para redefinir a senha no e-mail informado.'; }
+    const u=Object.values(mem.users).find(u=>u.email===String(email).trim().toLowerCase()); if(u){ u.senha='123456'; salvarDemo(); }
+    return 'Demonstração: a senha foi redefinida para 123456.';
+  },
+  apagarDemo(id){ if(MODE==='demo'){ delete mem.users[id]; salvarDemo(); } }
+};
+
+const LS='fitgestor_demo_v1';
+function salvarDemo(){ try{ localStorage.setItem(LS, JSON.stringify(mem)); }catch(e){} }
+function carregarDemo(){ try{ mem=JSON.parse(localStorage.getItem(LS)); }catch(e){} if(!mem||!mem.db){ mem=seed(); salvarDemo(); } }
+function resetDemo(){ if(!confirm('Apagar tudo e restaurar os dados de exemplo?')) return; mem=seed(); salvarDemo(); ss.del('fg_uid'); telaLogin(); toast('Dados de exemplo restaurados.'); }
+
+function seed(){
+  const h=hoje(), m=mesAtual(), mp=mesAnterior(m), db={};
+  const put=(p,id,d)=>{ (db[p]=db[p]||{})[id]=d; };
+  put('config','sistema',{nome:'FitGestor',pix:'sua-chave-pix@email.com',whatsapp:'',valorPadrao:99.9});
+  put('academias','acad1',{nome:'Academia Força Total',responsavel:'Carlos Lima',whatsapp:'(88) 99999-1111',email:'admin@demo.com',pix:'forcatotal@pix.com',endereco:'Rua Principal, 100 — Centro',valorPlano:99.9,vencimento:addDias(h,18),status:'ativo',criadoEm:addDias(h,-90),pagamentos:[{data:addDias(h,-12),valor:99.9,meses:1}],donoUid:'u_admin'});
+  put('academias','acad2',{nome:'Studio Corpo em Forma',responsavel:'Ana Souza',whatsapp:'(88) 99999-2222',email:'admin2@demo.com',pix:'',endereco:'',valorPlano:79.9,vencimento:addDias(h,-12),status:'ativo',criadoEm:addDias(h,-60),pagamentos:[],donoUid:'u_admin2'});
+  const users={u_super:{email:'super@demo.com',senha:'123456'},u_admin:{email:'admin@demo.com',senha:'123456'},u_admin2:{email:'admin2@demo.com',senha:'123456'},u_aluno:{email:'aluno@demo.com',senha:'123456'}};
+  put('usuarios','u_super',{papel:'superadmin',nome:'Dono do sistema',email:'super@demo.com'});
+  put('usuarios','u_admin',{papel:'admin',academiaId:'acad1',nome:'Carlos Lima',email:'admin@demo.com'});
+  put('usuarios','u_admin2',{papel:'admin',academiaId:'acad2',nome:'Ana Souza',email:'admin2@demo.com'});
+  put('usuarios','u_aluno',{papel:'aluno',academiaId:'acad1',alunoId:'al1',nome:'João Pereira',email:'aluno@demo.com'});
+  const A='academias/acad1/';
+  const lista=[['al1','João Pereira','(88) 98888-0001','1998-'+m.slice(5)+'-15','Hipertrofia',10,89.9],['al2','Maria Fernandes','(88) 98888-0002','1995-03-22','Emagrecimento',5,89.9],['al3','Pedro Alves','(88) 98888-0003','2001-07-09','Condicionamento',10,89.9],['al4','Larissa Rocha','(88) 98888-0004','1990-11-30','Emagrecimento',15,79.9],['al5','Rafael Costa','(88) 98888-0005','1987-01-12','Hipertrofia',20,120]];
+  lista.forEach(([id,nome,tel,nasc,obj,dia,valor],i)=>{
+    put(A+'alunos',id,{nome,telefone:tel,nascimento:nasc,objetivo:obj,plano:'Mensal',valor,diaVenc:dia,ativo:true,email:i===0?'aluno@demo.com':'',uid:i===0?'u_aluno':'',obs:i===3?'Dor no joelho direito — evitar impacto.':'',criadoEm:addDias(h,-80+i*5),metas:i===0?{peso:76,gordura:15,cintura:84,braco:38}:{}});
+    put(A+'mensalidades','mp'+id,{alunoId:id,competencia:mp,valor,vencimento:vencDe(mp,dia),pagoEm:i===3?'':vencDe(mp,dia),forma:i===3?'':'Pix'});
+    put(A+'mensalidades','mc'+id,{alunoId:id,competencia:m,valor,vencimento:vencDe(m,dia),pagoEm:(i===0||i===2)?h:'',forma:(i===0||i===2)?'Pix':''});
+  });
+  [[-60,82,1.75,22,100,92,98,34,56],[-30,80.5,1.75,20.5,101,90,97,35,57],[-2,79,1.75,19,102,88,96,36,58]].forEach(([d,peso,altura,gordura,peito,cintura,quadril,braco,coxa],i)=>put(A+'medidas','md'+i,{alunoId:'al1',data:addDias(h,d),peso,altura,gordura,peito,cintura,quadril,braco,coxa}));
+  const T=(nome,dias,ex,obs)=>({alunoId:'al1',nome,dias,obs:obs||'',atualizadoEm:addDias(h,-5),exercicios:ex.map(([nome,series,reps,carga,descanso])=>({nome,series,reps,carga,descanso}))});
+  put(A+'treinos','tA',T('Treino A — Peito e Tríceps','Seg / Qui',[['Supino reto com barra','4','10','40','60'],['Supino inclinado com halteres','3','12','16','60'],['Crucifixo na máquina','3','12','35','45'],['Tríceps no pulley','4','12','25','45'],['Tríceps francês','3','10','12','45']],'Aquecer 10 min na esteira antes.'));
+  put(A+'treinos','tB',T('Treino B — Costas e Bíceps','Ter / Sex',[['Puxada frontal','4','10','50','60'],['Remada baixa','4','10','45','60'],['Remada unilateral','3','12','18','45'],['Rosca direta','4','10','20','45'],['Rosca martelo','3','12','10','45']]));
+  put(A+'treinos','tC',T('Treino C — Pernas e Ombros','Qua / Sáb',[['Agachamento livre','4','10','50','90'],['Leg press 45°','4','12','140','60'],['Cadeira extensora','3','12','40','45'],['Mesa flexora','3','12','35','45'],['Desenvolvimento com halteres','4','10','14','60'],['Elevação lateral','3','15','8','45']],'Alongar ao final.'));
+  [[-1,'tC'],[-2,'tB'],[-3,'tA'],[-5,'tC']].forEach(([d,t],i)=>put(A+'registros','rg'+i,{alunoId:'al1',treinoId:t,nome:{tA:'Treino A — Peito e Tríceps',tB:'Treino B — Costas e Bíceps',tC:'Treino C — Pernas e Ombros'}[t],data:addDias(h,d)}));
+  return {db,users};
+}
+
+const EXERCICIOS=['Supino reto com barra','Supino inclinado com halteres','Supino declinado','Crucifixo na máquina','Crucifixo com halteres','Crossover','Flexão de braço','Puxada frontal','Puxada atrás','Remada baixa','Remada curvada','Remada unilateral','Pulldown','Barra fixa','Levantamento terra','Rosca direta','Rosca alternada','Rosca martelo','Rosca scott','Tríceps no pulley','Tríceps corda','Tríceps francês','Tríceps testa','Mergulho no banco','Desenvolvimento com halteres','Desenvolvimento na máquina','Elevação lateral','Elevação frontal','Encolhimento','Agachamento livre','Agachamento no smith','Agachamento búlgaro','Leg press 45°','Cadeira extensora','Mesa flexora','Cadeira flexora','Stiff','Afundo','Elevação pélvica','Cadeira abdutora','Cadeira adutora','Panturrilha em pé','Panturrilha sentado','Abdominal supra','Abdominal infra','Prancha','Esteira','Bicicleta ergométrica','Elíptico','Escada'];
+const CAMPOS=[['peso','Peso','kg'],['altura','Altura','m'],['gordura','% Gordura','%'],['peito','Peito','cm'],['cintura','Cintura','cm'],['abdomen','Abdômen','cm'],['quadril','Quadril','cm'],['braco','Braço','cm'],['coxa','Coxa','cm'],['panturrilha','Panturrilha','cm']];
+const METAS=[['peso','Peso','kg'],['gordura','% Gordura','%'],['cintura','Cintura','cm'],['abdomen','Abdômen','cm'],['quadril','Quadril','cm'],['braco','Braço','cm'],['coxa','Coxa','cm']];
+const rotulo = k => (CAMPOS.find(c=>c[0]===k)||[k,k])[1];
+
+/* ======================= início e login ======================= */
+function loadScript(src){ return new Promise((ok,err)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=()=>err(new Error('Falha ao carregar '+src)); document.head.appendChild(s); }); }
+async function init(){
+  if(MODE==='firebase'){
+    const b='https://www.gstatic.com/firebasejs/10.12.2/';
+    try{ await loadScript(b+'firebase-app-compat.js'); await loadScript(b+'firebase-auth-compat.js'); await loadScript(b+'firebase-firestore-compat.js'); }
+    catch(e){ app().innerHTML='<div class="empty">Não foi possível carregar o Firebase. Verifique a internet.</div>'; return; }
+    firebase.initializeApp(FIREBASE_CONFIG); fauth=firebase.auth(); fdb=firebase.firestore();
+    fauth.onAuthStateChanged(u=>u?entrar(u.uid):telaLogin());
+  } else {
+    carregarDemo(); const id=ss.get('fg_uid'); (id&&mem.users[id])?entrar(id):telaLogin();
+  }
+}
+
+function telaLogin(){
+  limparCharts(); fecharModal();
+  app().innerHTML=`${demoBar()}<div class="login"><div class="lbox">
+    <div class="logo" style="justify-content:center;font-size:30px"><span class="ic">💪</span>Fit<b>Gestor</b></div>
+    <p class="sub" style="text-align:center;margin-bottom:22px">Gestão completa para academias</p>
+    <div class="card"><form onsubmit="doLogin(event)">
+      <div style="margin-bottom:12px"><label>E-mail</label><input name="email" type="email" required autocomplete="username"></div>
+      <div style="margin-bottom:16px"><label>Senha</label><input name="senha" type="password" required autocomplete="current-password"></div>
+      <button class="btn p" style="width:100%;justify-content:center;padding:12px">Entrar</button>
+      <p style="text-align:center;margin-top:12px"><a class="sub" style="cursor:pointer" onclick="esqueciSenha()">Esqueci minha senha</a></p>
+    </form></div>
+    ${MODE==='demo'?`<div class="demo"><b>Teste com um clique:</b>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm" onclick="loginRapido('super@demo.com')">👑 Dono do sistema</button>
+        <button class="btn sm" onclick="loginRapido('admin@demo.com')">🏋️ Academia</button>
+        <button class="btn sm" onclick="loginRapido('aluno@demo.com')">🙋 Aluno</button>
+        <button class="btn sm" onclick="loginRapido('admin2@demo.com')">⛔ Academia atrasada</button>
+      </div>
+      <p class="sub" style="margin-top:10px">Senha de todos: 123456 · <a style="cursor:pointer;color:var(--acc)" onclick="resetDemo()">Restaurar dados de exemplo</a></p></div>`:''}
+  </div></div>`;
+}
+async function doLogin(e){
+  e.preventDefault(); const f=lerForm(e.target), b=e.target.querySelector('button');
+  b.disabled=true; b.textContent='Entrando...';
+  try{ const id=await Auth.login(f.email,f.senha); if(MODE==='demo') await entrar(id); }
+  catch(err){ toast(erroAuth(err),1); b.disabled=false; b.textContent='Entrar'; }
+}
+async function loginRapido(email){ try{ await entrar(await Auth.login(email,'123456')); }catch(e){ toast(erroAuth(e),1); } }
+async function esqueciSenha(){ const email=prompt('Digite o e-mail cadastrado:'); if(!email) return; try{ toast(await Auth.resetSenha(email)); }catch(e){ toast(erroAuth(e),1); } }
+async function sair(){ await Auth.logout(); if(MODE==='demo') telaLogin(); }
+
+async function entrar(id){
+  try{
+    const p=await Store.get('usuarios',id);
+    if(!p){ toast('Este login não tem perfil no sistema.',1); await Auth.logout(); return telaLogin(); }
+    S.perfil={uid:id,...p};
+    S.sis=(await Store.get('config','sistema'))||{};
+    if(p.papel==='superadmin') return iniciarSuper();
+    S.acad=await Store.get('academias',p.academiaId);
+    if(!S.acad){ toast('Academia não encontrada.',1); await Auth.logout(); return telaLogin(); }
+    if(acadBloqueada(S.acad)) return telaBloqueio();
+    if(p.papel==='aluno') return iniciarAluno();
+    iniciarAdmin();
+  }catch(e){ console.error(e); toast('Erro ao entrar: '+erroAuth(e),1); telaLogin(); }
+}
+
+/* ======================= navegação ======================= */
+const VIEWS={}, ABAS={};
+function limparCharts(){ S.charts.forEach(c=>{try{c.destroy()}catch(e){}}); S.charts=[]; }
+async function go(v,...a){
+  limparCharts(); fecharModal();
+  document.querySelectorAll('.nav a,.bnav a').forEach(x=>x.classList.toggle('on', x.dataset.v===v || (v==='ficha'&&x.dataset.v==='alunos')));
+  const el=document.getElementById('view'); if(!el) return;
+  el.innerHTML='<div class="empty">Carregando...</div>';
+  try{ await VIEWS[v](el,...a); }catch(e){ console.error(e); el.innerHTML=`<div class="empty">Erro ao carregar: ${esc(erroAuth(e))}</div>`; }
+}
+function shell(nav,titulo,aviso=''){
+  app().innerHTML=`${demoBar()}<div class="shell"><aside class="side">
+    <div class="logo"><span class="ic">💪</span>Fit<b>Gestor</b></div>
+    <div class="acad-name">${esc(titulo)}</div>
+    <nav class="nav">${nav.map(([k,i,t])=>`<a data-v="${k}" onclick="go('${k}')">${i} ${t}</a>`).join('')}<a onclick="sair()">🚪 Sair</a></nav>
+    <div class="foot">${esc(S.perfil.nome||'')}<br>${esc(S.perfil.email||'')}</div>
+  </aside><main class="main">${aviso}<div id="view"></div></main></div>`;
+}
+function grafico(id,labels,ds){
+  const el=document.getElementById(id); if(!el||!window.Chart) return;
+  const cores=['#c6f432','#60a5fa','#f472b6'];
+  S.charts.push(new Chart(el,{type:'line',data:{labels,datasets:ds.map((d,i)=>({borderColor:cores[i],backgroundColor:cores[i]+'22',fill:i===0,tension:.35,pointRadius:4,pointBackgroundColor:cores[i],...d}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b93a7'}}},scales:{x:{ticks:{color:'#8b93a7'},grid:{color:'#ffffff0d'}},y:{ticks:{color:'#8b93a7'},grid:{color:'#ffffff0d'}}}}}));
+}
+
+/* ======================= regras de cobrança ======================= */
+function statusMens(m){ if(m.pagoEm) return ['pago','Pago']; if(m.vencimento<hoje()) return ['atrasado','Atrasado']; return ['pendente','Pendente']; }
+function acadBloqueada(a){ return a.status==='bloqueado' || diasEntre(a.vencimento,hoje())>TOLERANCIA_DIAS; }
+function situacaoAcad(a){
+  if(a.status==='bloqueado') return ['bloq','Bloqueada'];
+  const d=diasEntre(hoje(),a.vencimento);
+  if(d<0) return -d>TOLERANCIA_DIAS?['bloq',`Suspensa (${-d}d)`]:['atrasado',`Atrasada ${-d}d`];
+  if(d<=5) return ['pendente',d===0?'Vence hoje':`Vence em ${d}d`];
+  return ['pago','Em dia'];
+}
+const linkCobranca=(a,x)=>wa(a.telefone,`Olá, ${primeiroNome(a.nome)}! Tudo bem? 😊\nLembrete da ${S.acad.nome}: sua mensalidade de ${nomeMes(x.competencia)} no valor de ${R(x.valor)} ${x.vencimento<hoje()?'venceu':'vence'} em ${fmtD(x.vencimento)}.${S.acad.pix?`\n\nChave Pix: ${S.acad.pix}`:''}\n\nSe já pagou, pode desconsiderar. Obrigado! 💪`);
+const linkRecibo=(a,x)=>wa(a.telefone,`✅ *Recibo — ${S.acad.nome}*\n\nRecebemos de ${a.nome} o valor de ${R(x.valor)} referente à mensalidade de ${nomeMes(x.competencia)}.\nPago em ${fmtD(x.pagoEm)} (${x.forma}).\n\nObrigado e bons treinos! 💪`);
+
+/* ======================= DONO DO SISTEMA ======================= */
+const NAV_SUPER=[['academias','🏢','Academias'],['sistema','⚙️','Configurações']];
+function iniciarSuper(){ shell(NAV_SUPER,'Painel do dono do sistema'); go('academias'); }
+
+VIEWS.academias=async el=>{
+  S.refresh=()=>go('academias');
+  const l=(await Store.list('academias')).sort(porNome); S.acads=l;
+  const ativas=l.filter(a=>!acadBloqueada(a)), atras=l.filter(a=>a.status!=='bloqueado'&&diasEntre(hoje(),a.vencimento)<0);
+  el.innerHTML=`<div class="top"><div><h1>Academias</h1><p class="sub">Clientes do sistema, mensalidades e bloqueios</p></div><button class="btn p" onclick="novaAcademia()">+ Nova academia</button></div>
+  <div class="cards">${kpi('Academias cadastradas',l.length,'🏢')}${kpi('Com acesso liberado',ativas.length,'✅','var(--ok)')}${kpi('Receita mensal prevista',R(soma(l.filter(a=>a.status!=='bloqueado'),'valorPlano')),'💰')}${kpi('Em atraso',atras.length,'⚠️',atras.length?'var(--bad)':'')}</div>
+  <div class="card tbl" style="padding:6px 10px">${l.length?`<table><thead><tr><th>Academia</th><th>WhatsApp</th><th>Mensalidade</th><th>Vencimento</th><th>Situação</th><th></th></tr></thead><tbody>
+  ${l.map(a=>{const [c,t]=situacaoAcad(a);return `<tr><td><b>${esc(a.nome)}</b><div class="sub">${esc(a.responsavel||'')} · ${esc(a.email||'')}</div></td><td>${esc(a.whatsapp||'—')}</td><td>${R(a.valorPlano)}</td><td>${fmtD(a.vencimento)}</td><td><span class="badge b-${c}">${t}</span></td>
+  <td style="text-align:right;white-space:nowrap"><button class="btn sm p" onclick="receberAcad('${a.id}')">Receber</button> ${a.whatsapp?`<a class="btn sm g" target="_blank" href="${cobrarAcad(a)}">Cobrar</a>`:''} <button class="btn sm ghost" onclick="editarAcademia('${a.id}')">Editar</button> <button class="btn sm ${a.status==='bloqueado'?'ghost':'d'}" onclick="toggleBloqueioAcad('${a.id}')">${a.status==='bloqueado'?'Desbloquear':'Bloquear'}</button></td></tr>`}).join('')}
+  </tbody></table>`:'<div class="empty">Nenhuma academia cadastrada ainda.</div>'}</div>
+  <p class="sub" style="margin-top:12px">O acesso de uma academia é suspenso automaticamente com mais de ${TOLERANCIA_DIAS} dias de atraso. “Receber” registra o pagamento e libera na hora.</p>`;
+};
+const cobrarAcad=a=>wa(a.whatsapp,`Olá, ${primeiroNome(a.responsavel)}! Aqui é do ${S.sis.nome||'FitGestor'}. A mensalidade do sistema da ${a.nome} (${R(a.valorPlano)}) ${a.vencimento<hoje()?'venceu':'vence'} em ${fmtD(a.vencimento)}.${S.sis.pix?`\n\nChave Pix: ${S.sis.pix}`:''}\n\nDepois é só enviar o comprovante por aqui. Obrigado! 🙏`);
+
+function novaAcademia(){
+  const m=abrirModal(`<h2>Nova academia</h2><form><div class="fg">
+    <div class="full"><label>Nome da academia *</label><input name="nome" required></div>
+    <div><label>Responsável *</label><input name="responsavel" required></div>
+    <div><label>WhatsApp do responsável</label><input name="whatsapp" placeholder="(88) 99999-9999"></div>
+    <div><label>E-mail de login *</label><input type="email" name="email" required></div>
+    <div><label>Senha inicial *</label><input name="senha" required minlength="6" value="${gerarSenha()}"></div>
+    <div><label>Mensalidade do sistema (R$)</label><input type="number" step="0.01" min="0" name="valorPlano" value="${S.sis.valorPadrao||99.9}" required></div>
+    <div><label>Primeiro vencimento</label><input type="date" name="vencimento" value="${addDias(hoje(),7)}" required></div>
+  </div><p class="sub" style="margin-top:10px">Dica: o primeiro vencimento em 7 dias funciona como período de teste grátis.</p>${rodapeModal('Criar academia')}</form>`);
+  onSubmit(m,async d=>{
+    const email=d.email.trim().toLowerCase();
+    const id=await Auth.criarUsuario(email,d.senha);
+    const acadId=await Store.add('academias',{nome:d.nome,responsavel:d.responsavel,whatsapp:d.whatsapp,email,pix:'',endereco:'',valorPlano:num(d.valorPlano)||0,vencimento:d.vencimento,status:'ativo',criadoEm:hoje(),pagamentos:[],donoUid:id});
+    await Store.set('usuarios',id,{papel:'admin',academiaId:acadId,nome:d.responsavel,email},false);
+    const msg=`Olá, ${primeiroNome(d.responsavel)}! 🎉 O sistema da ${d.nome} está pronto.\n\n🔗 ${urlPainel()}\n📧 Login: ${email}\n🔑 Senha: ${d.senha}\n\nPara trocar a senha, use “Esqueci minha senha” na tela de entrada.`;
+    abrirModal(`<h2>✅ Academia criada!</h2><p class="sub">Envie os dados de acesso para o responsável:</p><div class="pix" style="margin:12px 0;white-space:pre-wrap">${esc(msg)}</div>
+      <div class="mfoot"><button class="btn ghost" data-v="${esc(msg)}" onclick="copiar(this.dataset.v)">Copiar</button>${d.whatsapp?`<a class="btn g" target="_blank" href="${wa(d.whatsapp,msg)}">Enviar no WhatsApp</a>`:''}<button class="btn p" onclick="fecharModal();S.refresh()">Concluir</button></div>`);
+  });
+}
+function editarAcademia(id){
+  const a=S.acads.find(x=>x.id===id);
+  const m=abrirModal(`<h2>Editar academia</h2><form><div class="fg">
+    <div class="full"><label>Nome</label><input name="nome" required value="${esc(a.nome)}"></div>
+    <div><label>Responsável</label><input name="responsavel" value="${esc(a.responsavel)}"></div>
+    <div><label>WhatsApp</label><input name="whatsapp" value="${esc(a.whatsapp)}"></div>
+    <div><label>Mensalidade do sistema (R$)</label><input type="number" step="0.01" name="valorPlano" value="${a.valorPlano}"></div>
+    <div><label>Vencimento</label><input type="date" name="vencimento" value="${a.vencimento}" required></div>
+  </div>${rodapeModal('Salvar')}</form>`);
+  onSubmit(m,async d=>{ d.valorPlano=num(d.valorPlano)||0; await Store.set('academias',id,d); fecharModal(); toast('Academia atualizada!'); S.refresh(); });
+}
+function receberAcad(id){
+  const a=S.acads.find(x=>x.id===id);
+  const m=abrirModal(`<h2>Receber de ${esc(a.nome)}</h2><form><div class="fg">
+    <div><label>Meses pagos</label><select name="meses">${[1,2,3,6,12].map(n=>`<option value="${n}">${n} ${n>1?'meses':'mês'}</option>`).join('')}</select></div>
+    <div><label>Valor recebido (R$)</label><input type="number" step="0.01" name="valor" value="${a.valorPlano}" required></div>
+    <div><label>Data</label><input type="date" name="data" value="${hoje()}" required></div>
+  </div><p class="sub" style="margin-top:10px">Vencimento atual: ${fmtD(a.vencimento)}. O novo vencimento é calculado automaticamente e o acesso é liberado.</p>${rodapeModal('Confirmar recebimento')}</form>`);
+  onSubmit(m,async d=>{
+    const meses=parseInt(d.meses)||1, atraso=diasEntre(a.vencimento,hoje());
+    const base=atraso>30?hoje():a.vencimento;
+    const venc=addMeses(base,meses);
+    await Store.set('academias',id,{vencimento:venc,status:'ativo',pagamentos:[...(a.pagamentos||[]),{data:d.data,valor:num(d.valor)||0,meses}]});
+    fecharModal(); toast(`Pagamento registrado! Novo vencimento: ${fmtD(venc)}`); S.refresh();
+  });
+}
+async function toggleBloqueioAcad(id){
+  const a=S.acads.find(x=>x.id===id), bloq=a.status!=='bloqueado';
+  if(bloq&&!confirm(`Bloquear o acesso da ${a.nome}? A academia e os alunos não vão conseguir entrar até você desbloquear.`)) return;
+  await Store.set('academias',id,{status:bloq?'bloqueado':'ativo'}); toast(bloq?'Academia bloqueada.':'Academia desbloqueada.'); S.refresh();
+}
+VIEWS.sistema=async el=>{
+  const s=S.sis;
+  el.innerHTML=`<div class="top"><div><h1>Configurações do sistema</h1><p class="sub">Esses dados aparecem para as academias na hora de pagar</p></div></div>
+  <div class="card" style="max-width:640px"><form><div class="fg">
+    <div class="full"><label>Nome do sistema</label><input name="nome" value="${esc(s.nome||'FitGestor')}"></div>
+    <div><label>Sua chave Pix (para receber das academias)</label><input name="pix" value="${esc(s.pix)}"></div>
+    <div><label>Seu WhatsApp (suporte e comprovantes)</label><input name="whatsapp" value="${esc(s.whatsapp)}"></div>
+    <div><label>Mensalidade padrão (R$)</label><input type="number" step="0.01" name="valorPadrao" value="${s.valorPadrao||99.9}"></div>
+  </div><div class="mfoot"><button class="btn p">Salvar</button></div></form></div>`;
+  onSubmit(el,async d=>{ d.valorPadrao=num(d.valorPadrao)||0; await Store.set('config','sistema',d); S.sis={...S.sis,...d}; toast('Configurações salvas!'); go('sistema'); });
+};
+
+function telaBloqueio(){
+  const a=S.acad, aluno=S.perfil.papel==='aluno', d=diasEntre(a.vencimento,hoje());
+  app().innerHTML=`${demoBar()}<div class="login"><div class="lbox" style="max-width:460px"><div class="card" style="text-align:center">
+    <div style="font-size:44px">⛔</div><h1 style="margin:8px 0">${aluno?'Painel indisponível':'Acesso suspenso'}</h1>
+    ${aluno?`<p class="sub">O painel da ${esc(a.nome)} está temporariamente indisponível. Procure a recepção da academia.</p>`:
+    `<p class="sub" style="margin-bottom:16px">${a.status==='bloqueado'?'O acesso desta academia foi bloqueado.':`A mensalidade do sistema está em atraso há ${d} dias (venceu em ${fmtD(a.vencimento)}).`} Faça o pagamento para liberar o acesso.</p>
+     <p style="font-size:30px;font-weight:800;margin-bottom:14px">${R(a.valorPlano)}</p>
+     ${S.sis.pix?`<div style="text-align:left"><label>Chave Pix</label><div class="pix" style="margin-bottom:12px">${esc(S.sis.pix)}</div></div>`:''}
+     <div class="row" style="justify-content:center">${S.sis.pix?`<button class="btn p" data-v="${esc(S.sis.pix)}" onclick="copiar(this.dataset.v)">Copiar chave Pix</button>`:''}
+     ${S.sis.whatsapp?`<a class="btn g" target="_blank" href="${wa(S.sis.whatsapp,`Olá! Segue o comprovante do pagamento do sistema da ${a.nome}.`)}">Enviar comprovante</a>`:''}</div>`}
+    <p style="margin-top:20px"><a class="sub" style="cursor:pointer" onclick="sair()">Sair</a></p>
+  </div></div></div>`;
+}
+
+/* ======================= ACADEMIA (admin) ======================= */
+const NAV_ADMIN=[['painel','📊','Painel'],['alunos','👥','Alunos'],['mensalidades','💰','Mensalidades'],['config','⚙️','Configurações'],['assinatura','🧾','Minha assinatura']];
+function iniciarAdmin(){
+  const a=S.acad, d=diasEntre(hoje(),a.vencimento);
+  const link=`<a style="color:var(--acc);cursor:pointer;font-weight:600" onclick="go('assinatura')">Ver como pagar</a>`;
+  const aviso=d<0?`<div class="card aviso" style="border-color:var(--bad)">⚠️ A mensalidade do sistema venceu em ${fmtD(a.vencimento)}. O acesso será suspenso após ${TOLERANCIA_DIAS} dias de atraso. ${link}</div>`
+    :d<=5?`<div class="card aviso">🔔 A mensalidade do sistema ${d===0?'vence hoje':`vence em ${d} dia(s)`} (${fmtD(a.vencimento)}). ${link}</div>`:'';
+  shell(NAV_ADMIN,a.nome,aviso); go('painel');
+}
+
+VIEWS.painel=async el=>{
+  const [alunos,mens]=await Promise.all([Store.list(P('alunos')),Store.list(P('mensalidades'))]);
+  const ativos=alunos.filter(a=>a.ativo!==false), mapa=idx(alunos), m=mesAtual();
+  const doMes=mens.filter(x=>x.competencia===m);
+  const atras=mens.filter(x=>!x.pagoEm&&x.vencimento<hoje()).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
+  const mesNasc=hoje().slice(5,7), aniv=ativos.filter(a=>a.nascimento&&a.nascimento.slice(5,7)===mesNasc).sort((a,b)=>a.nascimento.slice(8).localeCompare(b.nascimento.slice(8)));
+  const semAcesso=ativos.filter(a=>!a.uid).length;
+  el.innerHTML=`<div class="top"><div><h1>Olá, ${esc(primeiroNome(S.perfil.nome))} 👋</h1><p class="sub">${esc(S.acad.nome)} · ${dataExtenso()}</p></div><button class="btn p" onclick="novoAluno()">+ Novo aluno</button></div>
+  <div class="cards">${kpi('Alunos ativos',ativos.length,'👥')}${kpi('Recebido em '+nomeMes(m),R(soma(doMes.filter(x=>x.pagoEm))),'✅','var(--ok)')}${kpi('A receber no mês',R(soma(doMes.filter(x=>!x.pagoEm))),'⏳','var(--warn)')}${kpi('Mensalidades atrasadas',atras.length,'⚠️',atras.length?'var(--bad)':'')}</div>
+  <div class="grid2">
+    <div class="card"><h2>⚠️ Atrasadas</h2>${atras.length?atras.slice(0,8).map(x=>{const a=mapa[x.alunoId]||{};return `<div class="li"><div class="av">${ini(a.nome)}</div><div style="flex:1;min-width:0"><b>${esc(a.nome||'Aluno removido')}</b><div class="sub">${nomeMes(x.competencia)} · venceu ${fmtD(x.vencimento)} · ${R(x.valor)}</div></div>${a.telefone?`<a class="btn g sm" target="_blank" href="${linkCobranca(a,x)}">Cobrar</a>`:''}</div>`}).join('')+(atras.length>8?`<p style="margin-top:8px"><a class="sub" style="cursor:pointer" onclick="go('mensalidades',mesAtual(),'vencidas')">Ver todas (${atras.length}) →</a></p>`:''):'<div class="empty">Nenhuma mensalidade atrasada 🎉</div>'}</div>
+    <div class="card"><h2>🎂 Aniversariantes do mês</h2>${aniv.length?aniv.map(a=>`<div class="li"><div class="av">${ini(a.nome)}</div><div style="flex:1;min-width:0"><b>${esc(a.nome)}</b><div class="sub">Dia ${a.nascimento.slice(8)}</div></div>${a.telefone?`<a class="btn g sm" target="_blank" href="${wa(a.telefone,`Parabéns, ${primeiroNome(a.nome)}! 🎉 A equipe da ${S.acad.nome} deseja um feliz aniversário e muitos treinos pela frente! 💪`)}">Parabenizar</a>`:''}</div>`).join(''):'<div class="empty">Ninguém faz aniversário este mês.</div>'}</div>
+  </div>
+  ${semAcesso?`<div class="card" style="margin-top:14px"><b>🔑 ${semAcesso} aluno(s) ainda sem acesso ao painel.</b> <span class="sub">Abra a ficha do aluno → aba “Acesso do aluno” para liberar o login e enviar pelo WhatsApp.</span></div>`:''}`;
+};
+
+/* ---------- alunos ---------- */
+VIEWS.alunos=async el=>{
+  const alunos=(await Store.list(P('alunos'))).sort(porNome); S.alunosCache=alunos;
+  el.innerHTML=`<div class="top"><div><h1>Alunos</h1><p class="sub">${alunos.filter(a=>a.ativo!==false).length} ativos de ${alunos.length} cadastrados</p></div><button class="btn p" onclick="novoAluno()">+ Novo aluno</button></div>
+  <div class="row" style="margin-bottom:14px"><input id="busca" placeholder="🔎 Buscar por nome ou telefone" oninput="filtrarAlunos()" style="max-width:340px"><select id="fstat" onchange="filtrarAlunos()" style="max-width:160px"><option value="ativos">Ativos</option><option value="inativos">Inativos</option><option value="todos">Todos</option></select></div>
+  <div class="card tbl" style="padding:6px 10px"><table><thead><tr><th>Aluno</th><th>WhatsApp</th><th>Plano</th><th>Vencimento</th><th>Painel</th></tr></thead><tbody id="tbAlunos"></tbody></table></div>`;
+  filtrarAlunos();
+};
+function filtrarAlunos(){
+  const q=($('#busca').value||'').toLowerCase().trim(), qd=soDig(q), st=$('#fstat').value;
+  const l=S.alunosCache.filter(a=>(st==='todos'||(st==='ativos')===(a.ativo!==false))&&(!q||(a.nome||'').toLowerCase().includes(q)||(qd&&soDig(a.telefone).includes(qd))));
+  $('#tbAlunos').innerHTML=l.length?l.map(a=>`<tr class="click" onclick="go('ficha','${a.id}')"><td><div class="row" style="flex-wrap:nowrap"><div class="av">${ini(a.nome)}</div><div><b>${esc(a.nome)}</b><div class="sub">${esc(a.objetivo||'')}${a.ativo===false?' · <span class="badge b-inativo">Inativo</span>':''}</div></div></div></td><td>${esc(a.telefone||'—')}</td><td>${esc(a.plano||'')} · ${R(a.valor)}</td><td>Dia ${a.diaVenc||'—'}</td><td>${a.uid?'<span class="badge b-pago">Liberado</span>':'<span class="badge b-inativo">Sem acesso</span>'}</td></tr>`).join(''):`<tr><td colspan="5" class="empty">Nenhum aluno encontrado.</td></tr>`;
+}
+function formAlunoHTML(a={}){
+  return `<div class="fg">
+    <div class="full"><label>Nome completo *</label><input name="nome" required value="${esc(a.nome)}"></div>
+    <div><label>WhatsApp</label><input name="telefone" value="${esc(a.telefone)}" placeholder="(88) 99999-9999"></div>
+    <div><label>Data de nascimento</label><input type="date" name="nascimento" value="${esc(a.nascimento)}"></div>
+    <div><label>Objetivo</label><select name="objetivo">${opts(['Hipertrofia','Emagrecimento','Condicionamento','Saúde e bem-estar','Reabilitação','Performance'],a.objetivo)}</select></div>
+    <div><label>Plano</label><select name="plano">${opts(['Mensal','Trimestral','Semestral','Anual'],a.plano)}</select></div>
+    <div><label>Valor da mensalidade (R$) *</label><input name="valor" type="number" step="0.01" min="0" value="${a.valor??''}" required></div>
+    <div><label>Dia do vencimento *</label><input name="diaVenc" type="number" min="1" max="28" value="${a.diaVenc||10}" required></div>
+    <div class="full"><label>Observações (lesões, restrições, saúde)</label><textarea name="obs" rows="2">${esc(a.obs)}</textarea></div>
+  </div>`;
+}
+function novoAluno(){
+  const m=abrirModal(`<h2>Novo aluno</h2><form>${formAlunoHTML()}<label style="display:flex;gap:8px;align-items:center;margin-top:12px;color:var(--txt);font-size:13px"><input type="checkbox" name="gerar" checked style="width:auto"> Gerar a mensalidade de ${nomeMes(mesAtual())}</label>${rodapeModal('Salvar aluno')}</form>`);
+  onSubmit(m,async d=>{
+    const gerar=!!d.gerar; delete d.gerar;
+    d.valor=num(d.valor)||0; d.diaVenc=clampDia(d.diaVenc);
+    Object.assign(d,{ativo:true,uid:'',email:'',criadoEm:hoje(),metas:{}});
+    const id=await Store.add(P('alunos'),d);
+    if(gerar) await Store.add(P('mensalidades'),{alunoId:id,competencia:mesAtual(),valor:d.valor,vencimento:vencDe(mesAtual(),d.diaVenc),pagoEm:'',forma:''});
+    toast('Aluno cadastrado!'); go('ficha',id,'treinos');
+  });
+}
+
+VIEWS.ficha=async(el,id,aba='dados')=>{
+  const a=await Store.get(P('alunos'),id);
+  if(!a){ el.innerHTML='<div class="empty">Aluno não encontrado.</div>'; return; }
+  S.aluno=a; S.refresh=()=>go('ficha',id,aba);
+  const abas=[['dados','Dados'],['treinos','Treinos'],['medidas','Medidas e metas'],['mensalidades','Mensalidades'],['acesso','Acesso do aluno']];
+  el.innerHTML=`<p style="margin-bottom:12px"><a class="sub" style="cursor:pointer" onclick="go('alunos')">← Voltar para alunos</a></p>
+  <div class="top"><div class="row" style="flex-wrap:nowrap"><div class="av" style="width:52px;height:52px;font-size:18px">${ini(a.nome)}</div><div><h1>${esc(a.nome)}</h1><p class="sub">${esc(a.objetivo||'')} · ${esc(a.plano||'')} ${R(a.valor)}${a.nascimento?' · '+idade(a.nascimento)+' anos':''} · ${a.ativo===false?'<span class="badge b-inativo">Inativo</span>':'<span class="badge b-pago">Ativo</span>'}</p></div></div>
+  ${a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,`Olá, ${primeiroNome(a.nome)}!`)}">💬 WhatsApp</a>`:''}</div>
+  ${a.obs?`<div class="card aviso" style="padding:12px 16px">⚕️ ${esc(a.obs)}</div>`:''}
+  <div class="tabs">${abas.map(([k,t])=>`<a class="${k===aba?'on':''}" onclick="go('ficha','${id}','${k}')">${t}</a>`).join('')}</div><div id="aba"></div>`;
+  await ABAS[aba]($('#aba'),a);
+};
+
+ABAS.dados=async(el,a)=>{
+  el.innerHTML=`<div class="card"><form>${formAlunoHTML(a)}<div class="mfoot" style="justify-content:space-between"><div class="row"><button type="button" class="btn ghost" onclick="toggleAtivo()">${a.ativo===false?'Reativar aluno':'Inativar aluno'}</button><button type="button" class="btn d" onclick="excluirAluno()">Excluir</button></div><button class="btn p">Salvar alterações</button></div></form></div>`;
+  onSubmit(el,async d=>{ d.valor=num(d.valor)||0; d.diaVenc=clampDia(d.diaVenc); await Store.set(P('alunos'),a.id,d); toast('Dados salvos!'); S.refresh(); });
+};
+async function toggleAtivo(){ const a=S.aluno; await Store.set(P('alunos'),a.id,{ativo:a.ativo===false}); toast(a.ativo===false?'Aluno reativado.':'Aluno inativado — não entra mais na geração de mensalidades.'); S.refresh(); }
+async function excluirAluno(){
+  const a=S.aluno;
+  if(!confirm(`Excluir ${a.nome} e todo o histórico (mensalidades, medidas e treinos)? Essa ação não pode ser desfeita.`)) return;
+  for(const c of ['mensalidades','medidas','treinos','registros']){ const l=await Store.list(P(c),['alunoId',a.id]); for(const x of l) await Store.del(P(c),x.id); }
+  if(a.uid){ await Store.del('usuarios',a.uid); Auth.apagarDemo(a.uid); }
+  await Store.del(P('alunos'),a.id); toast('Aluno excluído.'); go('alunos');
+}
+
+/* ---------- treinos ---------- */
+const descEx=x=>[x.series&&x.reps?`${x.series}x${x.reps}`:(x.series?x.series+' séries':(x.reps?x.reps+' reps':'')),x.carga?x.carga+(isNaN(x.carga)?'':' kg'):'',x.descanso?'descanso '+x.descanso+(isNaN(x.descanso)?'':'s'):''].filter(Boolean).join(' · ');
+function textoFicha(a,ts){
+  let s=`🏋️ *${S.acad.nome}*\nOlá, ${primeiroNome(a.nome)}! Segue sua ficha de treino:\n`;
+  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); s+=`${i+1}. ${x.nome}${d?' — '+d:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
+  return s+`\n📱 Acompanhe no seu painel: ${urlPainel()}\nBons treinos! 💪`;
+}
+ABAS.treinos=async(el,a)=>{
+  const [ts,regs]=await Promise.all([Store.list(P('treinos'),['alunoId',a.id]),Store.list(P('registros'),['alunoId',a.id])]);
+  S.treinos=ts.sort(porNome); regs.sort((x,y)=>y.data.localeCompare(x.data));
+  el.innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:14px"><p class="sub">${regs.length?`Último treino concluído: <b>${fmtD(regs[0].data)}</b> (${esc(regs[0].nome)}) · ${regs.filter(r=>diasEntre(r.data,hoje())<7).length} treino(s) nos últimos 7 dias`:'O aluno ainda não marcou treinos concluídos no painel.'}</p>
+  <div class="row">${S.treinos.length&&a.telefone?`<a class="btn g sm" target="_blank" href="${wa(a.telefone,textoFicha(a,S.treinos))}">📲 Enviar ficha completa</a>`:''}<button class="btn p sm" onclick="editarTreino()">+ Novo treino</button></div></div>
+  ${S.treinos.length?`<div class="grid2">${S.treinos.map(t=>cardTreino(t,a)).join('')}</div>`:'<div class="card empty">Nenhum treino cadastrado. Clique em “Novo treino” para montar a ficha.</div>'}`;
+};
+function cardTreino(t,a){
+  return `<div class="card"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub" style="margin-bottom:6px">${esc(t.dias||'')}${t.atualizadoEm?' · atualizado em '+fmtD(t.atualizadoEm):''}</p>
+  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}</div></div></div>`).join('')}
+  ${t.obs?`<p class="sub" style="margin-top:8px">📝 ${esc(t.obs)}</p>`:''}
+  <div class="row" style="margin-top:12px;gap:6px"><button class="btn sm ghost" onclick="editarTreino('${t.id}')">✏️ Editar</button><button class="btn sm ghost" onclick="copiarTreino('${t.id}')">⧉ Copiar para outro aluno</button>${a.telefone?`<a class="btn sm g" target="_blank" href="${wa(a.telefone,textoFicha(a,[t]))}">📲 Enviar</a>`:''}<button class="btn sm d" title="Excluir" onclick="excluirTreino('${t.id}')">🗑</button></div></div>`;
+}
+const linhaEx=(x={})=>`<div class="ex exrow"><input class="n" data-k="nome" list="dlEx" placeholder="Exercício" value="${esc(x.nome)}"><input data-k="series" placeholder="Séries" value="${esc(x.series)}"><input data-k="reps" placeholder="Reps" value="${esc(x.reps)}"><input data-k="carga" placeholder="Carga" value="${esc(x.carga)}"><input data-k="descanso" placeholder="Desc." value="${esc(x.descanso)}"><button type="button" class="btn sm ghost" title="Remover" onclick="this.parentElement.remove()">✕</button></div>`;
+function addEx(){ $('#exs').insertAdjacentHTML('beforeend',linhaEx()); const l=$('#exs').lastElementChild.querySelector('input'); l&&l.focus(); }
+function editarTreino(id){
+  const letra='ABCDEFG'[S.treinos.length]||'';
+  const t=id?S.treinos.find(x=>x.id===id):{nome:'Treino '+letra,exercicios:[{},{},{},{}]};
+  const m=abrirModal(`<h2>${id?'Editar':'Novo'} treino — ${esc(S.aluno.nome)}</h2><form>
+    <div class="fg"><div><label>Nome do treino *</label><input name="nome" required value="${esc(t.nome)}" placeholder="Treino A — Peito e Tríceps"></div><div><label>Dias da semana</label><input name="dias" value="${esc(t.dias)}" placeholder="Seg / Qui"></div></div>
+    <div class="ex exhead sub" style="margin:16px 0 4px;font-size:11.5px"><span>Exercício</span><span>Séries</span><span>Reps</span><span>Carga (kg)</span><span>Descanso (s)</span><span></span></div>
+    <div id="exs" style="margin-top:8px">${(t.exercicios||[]).map(linhaEx).join('')}</div>
+    <button type="button" class="btn ghost sm" onclick="addEx()">+ Exercício</button>
+    <div style="margin-top:14px"><label>Observações</label><textarea name="obs" rows="2" placeholder="Ex.: aquecer 10 min na esteira">${esc(t.obs)}</textarea></div>
+    <datalist id="dlEx">${EXERCICIOS.map(e=>`<option value="${esc(e)}">`).join('')}</datalist>
+    ${rodapeModal('Salvar treino')}</form>`,true);
+  onSubmit(m,async(d,f)=>{
+    const exs=[...f.querySelectorAll('.exrow')].map(r=>{ const o={}; r.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=i.value.trim()); return o; }).filter(x=>x.nome);
+    if(!exs.length) throw new Error('Adicione pelo menos um exercício.');
+    const doc={alunoId:S.aluno.id,nome:d.nome.trim(),dias:d.dias.trim(),obs:d.obs.trim(),exercicios:exs,atualizadoEm:hoje()};
+    if(id) await Store.set(P('treinos'),id,doc,false); else await Store.add(P('treinos'),doc);
+    toast('Treino salvo!'); S.refresh();
+  });
+}
+async function excluirTreino(id){ if(!confirm('Excluir este treino?')) return; await Store.del(P('treinos'),id); toast('Treino excluído.'); S.refresh(); }
+async function copiarTreino(id){
+  const t=S.treinos.find(x=>x.id===id);
+  const alunos=(await Store.list(P('alunos'))).filter(a=>a.id!==S.aluno.id&&a.ativo!==false).sort(porNome);
+  if(!alunos.length) return toast('Não há outros alunos ativos.',1);
+  const m=abrirModal(`<h2>Copiar “${esc(t.nome)}”</h2><p class="sub" style="margin-bottom:12px">Útil para reaproveitar a mesma ficha em vários alunos.</p><form><label>Para o aluno</label><select name="alvo">${alunos.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('')}</select>${rodapeModal('Copiar treino')}</form>`);
+  onSubmit(m,async d=>{ const {id:_,...doc}=t; await Store.add(P('treinos'),{...doc,alunoId:d.alvo,atualizadoEm:hoje()}); fecharModal(); toast('Treino copiado!'); });
+}
+
+/* ---------- medidas e metas ---------- */
+const imc=m=>{ const p=num(m.peso); let h=num(m.altura); if(!p||!h) return ''; if(h>3) h=h/100; return fmtN(p/(h*h)); };
+function blocoMetas(md,metas){
+  metas=metas||{}; const itens=METAS.filter(([k])=>metas[k]!==undefined&&metas[k]!=='');
+  if(!itens.length) return '<p class="sub">Nenhuma meta definida ainda.</p>';
+  return itens.map(([k,t,u])=>{
+    const vals=md.filter(x=>!isNaN(num(x[k]))), meta=num(metas[k]); let p=0, txt=`Meta: ${fmtN(meta)} ${u}`;
+    if(vals.length){ const i=num(vals[0][k]), a=num(vals[vals.length-1][k]); p=i===meta?100:Math.max(0,Math.min(100,(i-a)/(i-meta)*100)); txt=`${fmtN(i)} → <b>${fmtN(a)}</b> → meta ${fmtN(meta)} ${u}`; }
+    return `<div style="margin-bottom:12px"><div class="row" style="justify-content:space-between;margin-bottom:5px;gap:4px"><b>${t}</b><span class="sub">${txt} · ${Math.round(p)}%</span></div><div class="prog"><i style="width:${p}%"></i></div></div>`;
+  }).join('');
+}
+function tabelaMedidas(md,del){
+  if(!md.length) return '<div class="empty">Nenhuma avaliação registrada.</div>';
+  const cols=CAMPOS.filter(([k])=>k!=='altura'&&md.some(x=>!isNaN(num(x[k]))));
+  return `<table><thead><tr><th>Data</th>${cols.map(c=>`<th>${c[1]}</th>`).join('')}<th>IMC</th>${del?'<th></th>':''}</tr></thead><tbody>${[...md].reverse().map(x=>`<tr><td>${fmtD(x.data)}</td>${cols.map(([k])=>`<td>${isNaN(num(x[k]))?'—':fmtN(x[k])}</td>`).join('')}<td>${imc(x)||'—'}</td>${del?`<td style="text-align:right"><button class="btn sm ghost" onclick="excluirMedida('${x.id}')">🗑</button></td>`:''}</tr>`).join('')}</tbody></table>`;
+}
+const selCampo=()=>`<select id="selCampo" style="width:auto;padding:6px 10px" onchange="desenharEvol()">${CAMPOS.filter(c=>c[0]!=='altura').map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select>`;
+function desenharEvol(){
+  limparCharts(); const s=$('#selCampo'); if(!s) return; const k=s.value;
+  const md=S.medidas.filter(x=>!isNaN(num(x[k])));
+  const box=$('#cEvol').parentElement; const vazio=box.querySelector('.empty'); if(vazio) vazio.remove();
+  if(!md.length){ box.insertAdjacentHTML('beforeend','<div class="empty" style="position:absolute;inset:0;display:grid;place-items:center">Sem dados para esta medida.</div>'); return; }
+  const ds=[{label:rotulo(k),data:md.map(x=>num(x[k]))}];
+  if(S.metas&&!isNaN(num(S.metas[k]))) ds.push({label:'Meta',data:md.map(()=>num(S.metas[k])),borderDash:[6,6],pointRadius:0,fill:false});
+  grafico('cEvol',md.map(x=>fmtD(x.data).slice(0,5)),ds);
+}
+ABAS.medidas=async(el,a)=>{
+  const md=(await Store.list(P('medidas'),['alunoId',a.id])).sort(porData); S.medidas=md; S.metas=a.metas||{};
+  el.innerHTML=`<div class="row" style="justify-content:flex-end;margin-bottom:14px"><button class="btn ghost sm" onclick="editarMetas()">🎯 Definir metas</button><button class="btn p sm" onclick="novaMedida()">+ Nova avaliação</button></div>
+  <div class="grid2"><div class="card"><h2>🎯 Metas do aluno</h2>${blocoMetas(md,S.metas)}<p class="sub" style="margin-top:6px">Metas são opcionais — defina só as que fizerem sentido para o aluno.</p></div>
+  <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">📈 Evolução</h2>${selCampo()}</div><div class="chartbox"><canvas id="cEvol"></canvas></div></div></div>
+  <div class="card tbl" style="margin-top:14px;padding:6px 10px">${tabelaMedidas(md,true)}</div>`;
+  desenharEvol();
+};
+function novaMedida(){
+  const ult=S.medidas[S.medidas.length-1]||{};
+  const m=abrirModal(`<h2>Nova avaliação — ${esc(S.aluno.nome)}</h2><form><div class="fg"><div><label>Data</label><input type="date" name="data" value="${hoje()}" required></div>
+  ${CAMPOS.map(([k,t,u])=>`<div><label>${t} (${u})</label><input type="number" step="any" min="0" name="${k}" value="${k==='altura'&&ult.altura?ult.altura:''}" placeholder="${ult[k]!==undefined?'anterior: '+fmtN(ult[k]):''}"></div>`).join('')}
+  </div>${rodapeModal('Salvar avaliação')}</form>`,true);
+  onSubmit(m,async d=>{ const doc={alunoId:S.aluno.id,data:d.data}; CAMPOS.forEach(([k])=>{ const v=num(d[k]); if(!isNaN(v)) doc[k]=v; }); if(Object.keys(doc).length<3) throw new Error('Preencha pelo menos uma medida.'); await Store.add(P('medidas'),doc); toast('Avaliação salva!'); S.refresh(); });
+}
+async function excluirMedida(id){ if(!confirm('Excluir esta avaliação?')) return; await Store.del(P('medidas'),id); toast('Avaliação excluída.'); S.refresh(); }
+function editarMetas(){
+  const mt=S.metas||{};
+  const m=abrirModal(`<h2>Metas — ${esc(S.aluno.nome)}</h2><p class="sub" style="margin-bottom:12px">Deixe em branco o que não quiser acompanhar.</p><form><div class="fg">${METAS.map(([k,t,u])=>`<div><label>${t} (${u})</label><input type="number" step="any" min="0" name="${k}" value="${mt[k]??''}"></div>`).join('')}</div>${rodapeModal('Salvar metas')}</form>`);
+  onSubmit(m,async d=>{ const metas={}; METAS.forEach(([k])=>{ const v=num(d[k]); if(!isNaN(v)) metas[k]=v; }); await Store.set(P('alunos'),S.aluno.id,{metas}); toast('Metas salvas!'); S.refresh(); });
+}
+
+/* ---------- mensalidades ---------- */
+function tabelaMens(l,mapa,comNome){
+  if(!l.length) return '<div class="empty">Nenhuma mensalidade aqui.</div>';
+  return `<table><thead><tr>${comNome?'<th>Aluno</th>':''}<th>Referência</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th></th></tr></thead><tbody>${l.map(x=>{
+    const a=mapa[x.alunoId]||{nome:'(aluno removido)'}, [c,t]=statusMens(x);
+    return `<tr>${comNome?`<td><a style="cursor:pointer;font-weight:600" onclick="go('ficha','${x.alunoId}','mensalidades')">${esc(a.nome)}</a></td>`:''}<td>${nomeMes(x.competencia)}</td><td>${fmtD(x.vencimento)}</td><td>${R(x.valor)}</td>
+    <td><span class="badge b-${c}">${t}</span>${x.pagoEm?`<div class="sub" style="font-size:11.5px">${fmtD(x.pagoEm)} · ${esc(x.forma)}</div>`:''}</td>
+    <td style="text-align:right;white-space:nowrap">${x.pagoEm?`${a.telefone?`<a class="btn sm g" target="_blank" href="${linkRecibo(a,x)}">Recibo</a> `:''}<button class="btn sm ghost" onclick="estornar('${x.id}')">Desfazer</button>`:`<button class="btn sm p" onclick="pagar('${x.id}')">Receber</button> ${a.telefone?`<a class="btn sm g" target="_blank" href="${linkCobranca(a,x)}">Cobrar</a>`:''}`} <button class="btn sm ghost" title="Excluir" onclick="excluirMens('${x.id}')">🗑</button></td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+ABAS.mensalidades=async(el,a)=>{
+  const l=(await Store.list(P('mensalidades'),['alunoId',a.id])).sort((x,y)=>y.competencia.localeCompare(x.competencia));
+  el.innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:12px"><p class="sub">Total pago: <b style="color:var(--ok)">${R(soma(l.filter(x=>x.pagoEm)))}</b> · Em aberto: <b style="color:var(--warn)">${R(soma(l.filter(x=>!x.pagoEm)))}</b></p><button class="btn p sm" onclick="novaCobranca()">+ Nova cobrança</button></div>
+  <div class="card tbl" style="padding:6px 10px">${tabelaMens(l,{[a.id]:a},false)}</div>`;
+};
+function novaCobranca(){
+  const a=S.aluno, c=mesAtual();
+  const m=abrirModal(`<h2>Nova cobrança — ${esc(a.nome)}</h2><form><div class="fg"><div><label>Referência (mês)</label><input type="month" name="competencia" value="${c}" required></div><div><label>Valor (R$)</label><input type="number" step="0.01" min="0" name="valor" value="${a.valor||''}" required></div><div><label>Vencimento</label><input type="date" name="vencimento" value="${vencDe(c,a.diaVenc)}" required></div></div>${rodapeModal('Criar cobrança')}</form>`);
+  onSubmit(m,async d=>{ await Store.add(P('mensalidades'),{alunoId:a.id,competencia:d.competencia,valor:num(d.valor)||0,vencimento:d.vencimento,pagoEm:'',forma:''}); toast('Cobrança criada!'); S.refresh(); });
+}
+function pagar(id){
+  const m=abrirModal(`<h2>Receber mensalidade</h2><form><div class="fg"><div><label>Data do pagamento</label><input type="date" name="pagoEm" value="${hoje()}" required></div><div><label>Forma de pagamento</label><select name="forma">${opts(['Pix','Dinheiro','Cartão de débito','Cartão de crédito','Transferência'])}</select></div></div>${rodapeModal('Confirmar recebimento')}</form>`);
+  onSubmit(m,async d=>{ await Store.set(P('mensalidades'),id,d); toast('Pagamento registrado!'); S.refresh(); });
+}
+async function estornar(id){ if(!confirm('Desfazer o recebimento desta mensalidade?')) return; await Store.set(P('mensalidades'),id,{pagoEm:'',forma:''}); toast('Recebimento desfeito.'); S.refresh(); }
+async function excluirMens(id){ if(!confirm('Excluir esta mensalidade?')) return; await Store.del(P('mensalidades'),id); toast('Mensalidade excluída.'); S.refresh(); }
+
+VIEWS.mensalidades=async(el,comp=mesAtual(),filtro='todas')=>{
+  S.refresh=()=>go('mensalidades',comp,filtro);
+  const [alunos,mens]=await Promise.all([Store.list(P('alunos')),Store.list(P('mensalidades'))]); const mapa=idx(alunos);
+  const doMes=mens.filter(x=>x.competencia===comp), vencidas=mens.filter(x=>!x.pagoEm&&x.vencimento<hoje());
+  const l=(filtro==='vencidas'?vencidas:filtro==='todas'?doMes:doMes.filter(x=>statusMens(x)[0]===filtro)).sort((a,b)=>a.vencimento.localeCompare(b.vencimento)||(mapa[a.alunoId]?.nome||'').localeCompare(mapa[b.alunoId]?.nome||''));
+  const cnt=k=>doMes.filter(x=>statusMens(x)[0]===k).length;
+  el.innerHTML=`<div class="top"><div><h1>Mensalidades</h1><p class="sub">Recebimentos dos alunos</p></div><div class="row"><input type="month" value="${comp}" style="width:auto" onchange="this.value&&go('mensalidades',this.value,'${filtro==='vencidas'?'todas':filtro}')"><button class="btn p" onclick="gerarMes('${comp}')">⚡ Gerar mensalidades de ${nomeMes(comp)}</button></div></div>
+  <div class="cards">${kpi('Previsto em '+nomeMes(comp),R(soma(doMes)),'📋')}${kpi('Recebido',R(soma(doMes.filter(x=>x.pagoEm))),'✅','var(--ok)')}${kpi('Em aberto',R(soma(doMes.filter(x=>!x.pagoEm))),'⏳','var(--warn)')}${kpi('Total vencido (todos os meses)',R(soma(vencidas)),'⚠️',vencidas.length?'var(--bad)':'')}</div>
+  <div class="chips">${[['todas',`Todas (${doMes.length})`],['pago',`Pagas (${cnt('pago')})`],['pendente',`Pendentes (${cnt('pendente')})`],['atrasado',`Atrasadas (${cnt('atrasado')})`],['vencidas',`⚠️ Todas as vencidas (${vencidas.length})`]].map(([k,t])=>`<a class="chip ${k===filtro?'on':''}" onclick="go('mensalidades','${comp}','${k}')">${t}</a>`).join('')}</div>
+  <div class="card tbl" style="padding:6px 10px">${tabelaMens(l,mapa,true)}</div>`;
+};
+async function gerarMes(comp){
+  const [alunos,mens]=await Promise.all([Store.list(P('alunos')),Store.list(P('mensalidades'))]);
+  const ja=new Set(mens.filter(x=>x.competencia===comp).map(x=>x.alunoId));
+  const novos=alunos.filter(a=>a.ativo!==false&&!ja.has(a.id));
+  if(!novos.length) return toast(`Todas as mensalidades de ${nomeMes(comp)} já foram geradas.`);
+  for(const a of novos) await Store.add(P('mensalidades'),{alunoId:a.id,competencia:comp,valor:Number(a.valor)||0,vencimento:vencDe(comp,a.diaVenc),pagoEm:'',forma:''});
+  toast(`${novos.length} mensalidade(s) gerada(s)!`); S.refresh();
+}
+
+/* ---------- acesso do aluno ---------- */
+function msgAcesso(a,email,senha){ return `Olá, ${primeiroNome(a.nome)}! 💪 Seu acesso ao painel da ${S.acad.nome} está liberado.\n\n🔗 ${urlPainel()}\n📧 Login: ${email}${senha?`\n🔑 Senha: ${senha}`:''}\n\nLá você vê seus treinos, sua evolução e suas mensalidades.`; }
+ABAS.acesso=async(el,a)=>{
+  if(a.uid){
+    el.innerHTML=`<div class="card" style="max-width:580px"><h2>✅ Acesso liberado</h2><p class="sub" style="margin-bottom:14px">O aluno entra pelo mesmo endereço do sistema, com o e-mail e a senha cadastrados.</p>
+    <p><b>E-mail:</b> ${esc(a.email)}</p><p style="margin:6px 0 16px;word-break:break-all"><b>Link:</b> ${esc(urlPainel())}</p>
+    <div class="row">${a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,msgAcesso(a,a.email))}">📲 Reenviar acesso</a>`:''}<button class="btn ghost" onclick="redefinirSenhaAluno()">Redefinir senha</button><button class="btn d" onclick="removerAcesso()">Remover acesso</button></div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="card" style="max-width:580px"><h2>🔑 Criar acesso ao painel do aluno</h2><p class="sub" style="margin-bottom:14px">Com o acesso, o aluno vê os treinos (e marca o que fez), a evolução das medidas e as mensalidades pelo celular.</p>
+  <form><div class="fg"><div class="full"><label>E-mail do aluno</label><input name="email" type="email" required value="${esc(a.email)}"></div><div class="full"><label>Senha inicial (mín. 6 caracteres)</label><input name="senha" required minlength="6" value="${gerarSenha()}"></div></div><div class="mfoot"><button class="btn p">Criar acesso</button></div></form></div>`;
+  onSubmit(el,async d=>{
+    const email=d.email.trim().toLowerCase(); const id=await Auth.criarUsuario(email,d.senha);
+    await Store.set('usuarios',id,{papel:'aluno',academiaId:S.acad.id,alunoId:a.id,nome:a.nome,email},false);
+    await Store.set(P('alunos'),a.id,{uid:id,email});
+    const msg=msgAcesso(a,email,d.senha);
+    S.refresh();
+    abrirModal(`<h2>✅ Acesso criado!</h2><p class="sub">Envie os dados para o aluno:</p><div class="pix" style="margin:12px 0;white-space:pre-wrap">${esc(msg)}</div><div class="mfoot"><button class="btn ghost" data-v="${esc(msg)}" onclick="copiar(this.dataset.v)">Copiar</button>${a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,msg)}">Enviar no WhatsApp</a>`:''}<button class="btn p" onclick="fecharModal()">Fechar</button></div>`);
+  });
+};
+async function redefinirSenhaAluno(){ try{ toast(await Auth.resetSenha(S.aluno.email)); }catch(e){ toast(erroAuth(e),1); } }
+async function removerAcesso(){
+  const a=S.aluno; if(!confirm(`Remover o acesso de ${a.nome} ao painel?`)) return;
+  await Store.del('usuarios',a.uid); Auth.apagarDemo(a.uid); await Store.set(P('alunos'),a.id,{uid:''}); toast('Acesso removido.'); S.refresh();
+}
+
+/* ---------- configurações e assinatura ---------- */
+VIEWS.config=async el=>{
+  const a=S.acad;
+  el.innerHTML=`<div class="top"><div><h1>Configurações</h1><p class="sub">Dados usados nas mensagens de WhatsApp e no painel do aluno</p></div></div>
+  <div class="card" style="max-width:640px"><form><div class="fg">
+    <div class="full"><label>Nome da academia</label><input name="nome" required value="${esc(a.nome)}"></div>
+    <div><label>WhatsApp da academia</label><input name="whatsapp" value="${esc(a.whatsapp)}"></div>
+    <div><label>Chave Pix (para os alunos pagarem)</label><input name="pix" value="${esc(a.pix)}"></div>
+    <div class="full"><label>Endereço</label><input name="endereco" value="${esc(a.endereco)}"></div>
+  </div><div class="mfoot"><button class="btn p">Salvar</button></div></form></div>`;
+  onSubmit(el,async d=>{ await Store.set('academias',a.id,d); Object.assign(S.acad,d); const n=$('.acad-name'); if(n) n.textContent=d.nome; toast('Configurações salvas!'); go('config'); });
+};
+VIEWS.assinatura=async el=>{
+  const a=S.acad, [c,t]=situacaoAcad(a);
+  el.innerHTML=`<div class="top"><div><h1>Minha assinatura</h1><p class="sub">Mensalidade do sistema ${esc(S.sis.nome||'FitGestor')}</p></div></div>
+  <div class="cards">${kpi('Mensalidade',R(a.valorPlano),'🧾')}${kpi('Próximo vencimento',fmtD(a.vencimento),'📅')}<div class="card kpi"><div class="l">Situação</div><div class="v"><span class="badge b-${c}" style="font-size:14px">${t}</span></div></div></div>
+  <div class="grid2"><div class="card"><h2>Como pagar</h2>${S.sis.pix?`<label>Chave Pix</label><div class="pix" style="margin-bottom:12px">${esc(S.sis.pix)}</div><div class="row"><button class="btn p" data-v="${esc(S.sis.pix)}" onclick="copiar(this.dataset.v)">Copiar chave</button>${S.sis.whatsapp?`<a class="btn g" target="_blank" href="${wa(S.sis.whatsapp,`Olá! Segue o comprovante do pagamento do sistema da ${a.nome}.`)}">Enviar comprovante</a>`:''}</div><p class="sub" style="margin-top:12px">Depois de confirmado, o vencimento é atualizado automaticamente.</p>`:'<p class="sub">Fale com o suporte para receber os dados de pagamento.</p>'}</div>
+  <div class="card"><h2>Pagamentos registrados</h2>${(a.pagamentos||[]).length?[...a.pagamentos].reverse().map(p=>`<div class="li"><div style="flex:1">${fmtD(p.data)}<div class="sub">${p.meses||1} ${(p.meses||1)>1?'meses':'mês'}</div></div><b>${R(p.valor)}</b></div>`).join(''):'<p class="sub">Nenhum pagamento registrado ainda.</p>'}</div></div>`;
+};
+
+/* ======================= PAINEL DO ALUNO ======================= */
+async function iniciarAluno(){
+  const id=S.perfil.alunoId;
+  const [al,ts,md,ms,rg]=await Promise.all([Store.get(P('alunos'),id),Store.list(P('treinos'),['alunoId',id]),Store.list(P('medidas'),['alunoId',id]),Store.list(P('mensalidades'),['alunoId',id]),Store.list(P('registros'),['alunoId',id])]);
+  if(!al){ toast('Cadastro de aluno não encontrado. Procure a academia.',1); await Auth.logout(); return telaLogin(); }
+  S.al={aluno:al,treinos:ts.sort(porNome),medidas:md.sort(porData),mens:ms.sort((a,b)=>b.competencia.localeCompare(a.competencia)),regs:rg.sort((a,b)=>b.data.localeCompare(a.data))};
+  S.feitos={};
+  app().innerHTML=`${demoBar()}<div class="ap"><div class="row" style="justify-content:space-between;margin-bottom:18px;flex-wrap:nowrap"><div><p class="sub">${esc(S.acad.nome)}</p><h1>Olá, ${esc(primeiroNome(al.nome))}! 💪</h1></div><button class="btn ghost sm" onclick="sair()">Sair</button></div><div id="view"></div></div>
+  <nav class="bnav"><a data-v="aTreinos" onclick="go('aTreinos')"><span>🏋️</span>Treinos</a><a data-v="aEvolucao" onclick="go('aEvolucao')"><span>📈</span>Evolução</a><a data-v="aPagamentos" onclick="go('aPagamentos')"><span>💳</span>Pagamentos</a></nav>`;
+  go('aTreinos');
+}
+const rotuloCurto=(n,k)=>{ const m=String(n).match(/treino\s+([A-Z0-9]+)/i); return m?'Treino '+m[1].toUpperCase():(String(n).length>18?String(n).slice(0,16)+'…':n||'Treino '+(k+1)); };
+VIEWS.aTreinos=async(el,i)=>{
+  const {treinos,regs}=S.al;
+  const sem=regs.filter(r=>diasEntre(r.data,hoje())<7).length;
+  const kpis=`<div class="cards" style="grid-template-columns:1fr 1fr;margin-bottom:16px">${kpi('Últimos 7 dias',sem+' treino'+(sem===1?'':'s'),'🔥')}${kpi('Total concluído',regs.length,'🏆')}</div>`;
+  if(!treinos.length){ el.innerHTML=kpis+'<div class="card empty">Seu instrutor ainda não cadastrou seus treinos.</div>'; return; }
+  if(i==null){ const u=regs[0]; const k=u?treinos.findIndex(t=>t.id===u.treinoId):-1; i=k<0?0:(k+1)%treinos.length; }
+  const t=treinos[i], f=S.feitos[t.id]||(S.feitos[t.id]=[]), n=(t.exercicios||[]).length;
+  el.innerHTML=kpis+`<div class="chips">${treinos.map((x,k)=>`<a class="chip ${k===i?'on':''}" onclick="go('aTreinos',${k})">${esc(rotuloCurto(x.nome,k))}</a>`).join('')}</div>
+  <div class="card" style="margin-bottom:12px"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub">${esc(t.dias||'')}${t.dias?' · ':''}${n} exercícios${regs[0]&&regs[0].treinoId!==t.id&&i===((treinos.findIndex(x=>x.id===regs[0].treinoId)+1)%treinos.length)?' · <b style="color:var(--acc)">próximo da sequência</b>':''}</p>${t.obs?`<p class="sub" style="margin-top:6px">📝 ${esc(t.obs)}</p>`:''}<div class="prog" style="margin-top:12px"><i id="pg" style="width:${n?f.length/n*100:0}%"></i></div><p class="sub" id="pgt" style="margin-top:4px;font-size:12px">${f.length} de ${n} feitos</p></div>
+  ${(t.exercicios||[]).map((x,k)=>`<div class="exc ${f.includes(k)?'ok':''}" onclick="marcarEx('${t.id}',${k},this,${n})"><div class="ck">${f.includes(k)?'✓':k+1}</div><div><div class="nm" style="font-weight:600">${esc(x.nome)}</div><div class="sub">${esc(descEx(x))}</div></div></div>`).join('')}
+  <button class="btn p" style="width:100%;justify-content:center;padding:14px;margin-top:8px" onclick="concluirTreino('${t.id}',${i})">✅ Concluir treino</button>`;
+};
+function marcarEx(tid,k,el,n){
+  const f=S.feitos[tid], p=f.indexOf(k); if(p<0) f.push(k); else f.splice(p,1);
+  el.classList.toggle('ok',p<0); el.querySelector('.ck').textContent=p<0?'✓':k+1;
+  $('#pg').style.width=(f.length/n*100)+'%'; $('#pgt').textContent=`${f.length} de ${n} feitos`;
+}
+async function concluirTreino(tid,i){
+  const t=S.al.treinos.find(x=>x.id===tid), f=S.feitos[tid]||[];
+  if(!f.length&&!confirm('Nenhum exercício marcado. Concluir mesmo assim?')) return;
+  const reg={alunoId:S.al.aluno.id,treinoId:tid,nome:t.nome,data:hoje(),feitos:f.length,total:(t.exercicios||[]).length};
+  try{ const id=await Store.add(P('registros'),reg); S.al.regs.unshift({id,...reg}); S.feitos[tid]=[]; toast('Treino concluído! Mandou bem 🔥'); go('aTreinos',(i+1)%S.al.treinos.length); }
+  catch(e){ toast(erroAuth(e),1); }
+}
+VIEWS.aEvolucao=async el=>{
+  const {aluno,medidas}=S.al, u=medidas[medidas.length-1];
+  S.medidas=medidas; S.metas=aluno.metas||{};
+  el.innerHTML=`${u?`<p class="sub" style="margin-bottom:8px">Última avaliação: ${fmtD(u.data)}</p><div class="cards" style="grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">${kpi('Peso',u.peso?fmtN(u.peso)+'kg':'—')}${kpi('IMC',imc(u)||'—')}${kpi('Gordura',u.gordura?fmtN(u.gordura)+'%':'—')}</div>`:''}
+  <div class="card" style="margin-bottom:12px"><h2>🎯 Minhas metas</h2>${blocoMetas(medidas,S.metas)}</div>
+  ${medidas.length?`<div class="card" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">📈 Evolução</h2>${selCampo()}</div><div class="chartbox"><canvas id="cEvol"></canvas></div></div>
+  <div class="card tbl" style="padding:6px 10px">${tabelaMedidas(medidas,false)}</div>`:'<div class="card empty">Nenhuma avaliação física registrada ainda. Peça ao seu instrutor!</div>'}`;
+  if(medidas.length) desenharEvol();
+};
+VIEWS.aPagamentos=async el=>{
+  const {mens,aluno}=S.al, ab=mens.filter(x=>!x.pagoEm).sort((a,b)=>a.vencimento.localeCompare(b.vencimento)), p=ab[0];
+  el.innerHTML=`${p?`<div class="card" style="margin-bottom:12px;${p.vencimento<hoje()?'border-color:var(--bad)':''}"><p class="sub">Próxima mensalidade ${(()=>{const [c,t]=statusMens(p);return `<span class="badge b-${c}">${t}</span>`})()}</p><p style="font-size:30px;font-weight:800">${R(p.valor)}</p><p class="sub" style="margin-bottom:12px">${nomeMes(p.competencia)} · vence em ${fmtD(p.vencimento)}${ab.length>1?` · ${ab.length} em aberto (${R(soma(ab))})`:''}</p>
+  ${S.acad.pix?`<label>Chave Pix da academia</label><div class="pix" style="margin-bottom:10px">${esc(S.acad.pix)}</div><div class="row"><button class="btn p" data-v="${esc(S.acad.pix)}" onclick="copiar(this.dataset.v)">Copiar chave Pix</button>${S.acad.whatsapp?`<a class="btn g" target="_blank" href="${wa(S.acad.whatsapp,`Olá! Sou ${aluno.nome}, segue o comprovante da mensalidade de ${nomeMes(p.competencia)}.`)}">Enviar comprovante</a>`:''}</div>`:'<p class="sub">Pague na recepção da academia.</p>'}</div>`
+  :`<div class="card" style="margin-bottom:12px;text-align:center"><div style="font-size:36px">✅</div><b>Tudo em dia!</b><p class="sub">Você não tem mensalidades em aberto.</p></div>`}
+  <div class="card"><h2>Histórico</h2>${mens.length?mens.map(x=>{const [c,t]=statusMens(x);return `<div class="li"><div style="flex:1"><b>${nomeMes(x.competencia)}</b><div class="sub">${x.pagoEm?'Pago em '+fmtD(x.pagoEm):'Vence em '+fmtD(x.vencimento)}</div></div><div style="text-align:right"><b>${R(x.valor)}</b><div><span class="badge b-${c}">${t}</span></div></div></div>`}).join(''):'<p class="sub">Nenhuma mensalidade ainda.</p>'}</div>`;
+};
+
+init();
+</script>
+</body>
+</html>

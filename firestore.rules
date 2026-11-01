@@ -1,0 +1,68 @@
+rules_version = '2';
+// FitGestor — regras de segurança do Firestore
+// Cada academia só enxerga os próprios dados; o aluno só enxerga o que é dele;
+// academia bloqueada (status "bloqueado") perde o acesso aos dados.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() { return request.auth != null; }
+    function temPerfil() { return logado() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)); }
+    function perfil() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data; }
+    function isSuper() { return temPerfil() && perfil().papel == 'superadmin'; }
+    function membro(a) { return temPerfil() && perfil().academiaId == a; }
+    function ativa(a) { return get(/databases/$(database)/documents/academias/$(a)).data.status != 'bloqueado'; }
+    function isStaff(a) { return membro(a) && perfil().papel in ['admin', 'instrutor'] && ativa(a); }
+    function isAluno(a) { return membro(a) && perfil().papel == 'aluno' && ativa(a); }
+    function doAluno(a, alunoId) { return isAluno(a) && perfil().alunoId == alunoId; }
+
+    // Configuração geral (sua chave Pix, WhatsApp, nome do sistema)
+    match /config/{doc} {
+      allow read: if logado();
+      allow write: if isSuper();
+    }
+
+    // Perfis de login (papel + academia)
+    match /usuarios/{uid} {
+      allow read: if logado() && (request.auth.uid == uid || isSuper() || isStaff(resource.data.academiaId));
+      allow create: if isSuper()
+        || (isStaff(request.resource.data.academiaId) && request.resource.data.papel == 'aluno');
+      allow update: if isSuper()
+        || (isStaff(resource.data.academiaId) && resource.data.papel == 'aluno'
+            && request.resource.data.papel == 'aluno'
+            && request.resource.data.academiaId == resource.data.academiaId);
+      allow delete: if isSuper() || (isStaff(resource.data.academiaId) && resource.data.papel == 'aluno');
+    }
+
+    match /academias/{a} {
+      allow read: if isSuper() || membro(a);
+      allow create, delete: if isSuper();
+      // A academia pode mudar nome/Pix/WhatsApp, mas nunca vencimento, status ou valor do plano
+      allow update: if isSuper()
+        || (isStaff(a) && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['status', 'vencimento', 'valorPlano', 'pagamentos', 'donoUid']));
+
+      match /alunos/{id} {
+        allow read: if isSuper() || isStaff(a) || doAluno(a, id);
+        allow write: if isSuper() || isStaff(a);
+      }
+      match /mensalidades/{id} {
+        allow read: if isSuper() || isStaff(a) || doAluno(a, resource.data.alunoId);
+        allow write: if isSuper() || isStaff(a);
+      }
+      match /medidas/{id} {
+        allow read: if isSuper() || isStaff(a) || doAluno(a, resource.data.alunoId);
+        allow write: if isSuper() || isStaff(a);
+      }
+      match /treinos/{id} {
+        allow read: if isSuper() || isStaff(a) || doAluno(a, resource.data.alunoId);
+        allow write: if isSuper() || isStaff(a);
+      }
+      // Treinos concluídos: o próprio aluno registra pelo painel
+      match /registros/{id} {
+        allow read: if isSuper() || isStaff(a) || doAluno(a, resource.data.alunoId);
+        allow create: if isStaff(a) || doAluno(a, request.resource.data.alunoId);
+        allow update, delete: if isSuper() || isStaff(a);
+      }
+    }
+  }
+}
