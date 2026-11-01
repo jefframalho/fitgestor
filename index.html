@@ -288,7 +288,7 @@ const PARQ=['Algum médico já disse que você tem problema no coração e só d
 const imcClass=v=>v<18.5?'Abaixo do peso':v<25?'Peso normal':v<30?'Sobrepeso':v<35?'Obesidade grau I':v<40?'Obesidade grau II':'Obesidade grau III';
 function composicao(m,sexo){
   const o={}, p=num(m.peso); let h=num(m.altura); if(h>3) h/=100;
-  if(p&&h){ o.imc=p/(h*h); o.imcClass=imcClass(o.imc); }
+  if(p&&h){ o.imc=p/(h*h); o.imcClass=imcClass(Math.round(o.imc*10)/10); }
   const g=num(m.gordura); if(p&&!isNaN(g)){ o.mg=p*g/100; o.mm=p-o.mg; }
   const c=num(m.cintura), q=num(m.quadril);
   if(c&&q){ o.rcq=c/q; const f=sexo==='Feminino'; o.rcqRisco=f?(o.rcq<0.8?'Baixo':o.rcq<0.85?'Moderado':'Alto'):(o.rcq<0.9?'Baixo':o.rcq<1?'Moderado':'Alto'); }
@@ -574,14 +574,20 @@ function formAlunoHTML(a={}){
   </div>`;
 }
 function novoAluno(){
-  const m=abrirModal(`<h2>Novo aluno</h2><form>${formAlunoHTML()}<label style="display:flex;gap:8px;align-items:center;margin-top:12px;color:var(--txt);font-size:13px"><input type="checkbox" name="gerar" checked style="width:auto"> Gerar a mensalidade de ${nomeMes(mesAtual())}</label>${rodapeModal('Salvar aluno')}</form>`);
+  const MED0=['peso','altura','gordura','peito','cintura','abdomen','quadril','bracoD','coxaD','panturrilha'];
+  const m=abrirModal(`<h2>Novo aluno</h2><form>${formAlunoHTML()}
+  <div class="sec">📏 Medidas iniciais <span class="sub" style="text-transform:none;letter-spacing:0;font-weight:500">(opcional — preencha o que tiver)</span></div>
+  <div class="fg">${MED0.map(k=>{const [,t,u]=CAMPOS.find(c=>c[0]===k);return `<div><label>${t} (${u})</label><input type="number" step="any" min="0" name="m_${k}"></div>`}).join('')}</div>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--txt);font-size:13px"><input type="checkbox" name="gerar" checked style="width:auto"> Gerar a mensalidade de ${nomeMes(mesAtual())}</label>${rodapeModal('Salvar aluno')}</form>`,true);
   onSubmit(m,async d=>{
     const gerar=!!d.gerar; delete d.gerar;
+    const med={}; MED0.forEach(k=>{ const v=num(d['m_'+k]); if(!isNaN(v)) med[k]=v; delete d['m_'+k]; });
     d.valor=num(d.valor)||0; d.diaVenc=clampDia(d.diaVenc);
     Object.assign(d,{ativo:true,uid:'',email:'',criadoEm:hoje(),metas:{}});
     const id=await Store.add(P('alunos'),d);
     if(gerar) await Store.add(P('mensalidades'),{alunoId:id,competencia:mesAtual(),valor:d.valor,vencimento:vencDe(mesAtual(),d.diaVenc),pagoEm:'',forma:''});
-    toast('Aluno cadastrado! Agora preencha a anamnese.'); go('ficha',id,'anamnese');
+    if(Object.keys(med).length) await Store.add(P('medidas'),{alunoId:id,data:hoje(),...med});
+    toast('Aluno cadastrado!'); go('ficha',id,'medidas');
   });
 }
 
@@ -589,7 +595,7 @@ VIEWS.ficha=async(el,id,aba='dados')=>{
   const a=await Store.get(P('alunos'),id);
   if(!a){ el.innerHTML='<div class="empty">Aluno não encontrado.</div>'; return; }
   S.aluno=a; S.refresh=()=>go('ficha',id,aba);
-  const abas=[['dados','Dados'],['anamnese','Anamnese'],['medidas','Avaliação física'],['treinos','Treinos'],['mensalidades','Mensalidades'],['acesso','Acesso do aluno']];
+  const abas=[['dados','👤 Dados'],['medidas','📏 Medidas'],['anamnese','📋 Anamnese'],['treinos','🏋️ Treinos'],['mensalidades','💰 Mensalidades'],['acesso','🔑 Acesso do aluno']];
   const al=alertasAluno(a);
   el.innerHTML=`<p style="margin-bottom:12px"><a class="sub" style="cursor:pointer" onclick="go('alunos')">← Voltar para alunos</a></p>
   <div class="top"><div class="row" style="flex-wrap:nowrap"><div class="av" style="width:52px;height:52px;font-size:18px">${ini(a.nome)}</div><div><h1>${esc(a.nome)}</h1><p class="sub">${esc(a.objetivo||'')} · ${esc(a.plano||'')} ${R(a.valor)}${a.nascimento?' · '+idade(a.nascimento)+' anos':''} · ${a.ativo===false?'<span class="badge b-inativo">Inativo</span>':'<span class="badge b-pago">Ativo</span>'}</p></div></div>
@@ -946,7 +952,7 @@ function mostrarAnalise(r){
 }
 
 /* ---------- medidas e metas ---------- */
-const imc=m=>{ const p=num(m.peso); let h=num(m.altura); if(!p||!h) return ''; if(h>3) h=h/100; return fmtN(p/(h*h)); };
+const imc=m=>{ const p=num(m.peso); let h=num(m.altura); if(!p||!h) return ''; if(h>3) h=h/100; return (p/(h*h)).toFixed(1).replace('.',','); };
 function blocoMetas(md,metas){
   metas=metas||{}; const itens=METAS.filter(([k])=>metas[k]!==undefined&&metas[k]!=='');
   if(!itens.length) return '<p class="sub">Nenhuma meta definida ainda.</p>';
@@ -963,9 +969,9 @@ function tabelaMedidas(md,del){
   return `<table><thead><tr><th>Data</th>${cols.map(c=>`<th>${c[1]}</th>`).join('')}${pa?'<th>PA</th>':''}<th>IMC</th>${del?'<th></th>':''}</tr></thead><tbody>${[...md].reverse().map(x=>`<tr><td>${fmtD(x.data)}${x.obs?` <span title="${esc(x.obs)}">📝</span>`:''}</td>${cols.map(([k])=>`<td>${isNaN(num(x[k]))?'—':fmtN(x[k])}</td>`).join('')}${pa?`<td>${esc(x.pa||'—')}</td>`:''}<td>${imc(x)||'—'}</td>${del?`<td style="text-align:right"><button class="btn sm ghost" onclick="excluirMedida('${x.id}')">🗑</button></td>`:''}</tr>`).join('')}</tbody></table>`;
 }
 function blocoComposicao(md,sexo){
-  const u=md[md.length-1]; if(!u) return '<p class="sub">Nenhuma avaliação ainda. Clique em “+ Nova avaliação”.</p>';
+  const u=md[md.length-1]; if(!u) return S.perfil.papel==='aluno'?'<p class="sub">Nenhuma medida registrada ainda.</p>':'<p class="sub" style="margin-bottom:12px">Nenhuma medida registrada ainda.</p><button class="btn p" onclick="novaMedida()">📏 Registrar medidas agora</button>';
   const c=composicao(u,sexo), it=[];
-  if(c.imc) it.push(['IMC',fmtN(c.imc),c.imcClass]);
+  if(c.imc) it.push(['IMC',c.imc.toFixed(1).replace('.',','),c.imcClass]);
   if(!isNaN(num(u.gordura))) it.push(['% Gordura',fmtN(u.gordura)+'%','']);
   if(c.mg!=null){ it.push(['Massa gorda',fmtN(c.mg)+' kg','']); it.push(['Massa magra',fmtN(c.mm)+' kg','']); }
   if(c.rcq) it.push(['Cintura/quadril',c.rcq.toFixed(2),'Risco '+c.rcqRisco.toLowerCase()]);
@@ -992,7 +998,7 @@ function desenharEvol(){
 }
 ABAS.medidas=async(el,a)=>{
   const md=(await Store.list(P('medidas'),['alunoId',a.id])).sort(porData); S.medidas=md; S.metas=a.metas||{};
-  el.innerHTML=`<div class="row" style="justify-content:flex-end;margin-bottom:14px"><button class="btn iab sm" onclick="analisarEvolucao(this)">✨ Análise da IA</button><button class="btn ghost sm" onclick="editarMetas()">🎯 Definir metas</button><button class="btn p sm" onclick="novaMedida()">+ Nova avaliação</button></div>
+  el.innerHTML=`<div class="row" style="justify-content:flex-end;margin-bottom:14px"><button class="btn iab sm" onclick="analisarEvolucao(this)">✨ Análise da IA</button><button class="btn ghost sm" onclick="editarMetas()">🎯 Definir metas</button><button class="btn p sm" onclick="novaMedida()">📏 + Registrar medidas</button></div>
   <div class="grid2"><div class="card"><h2>🧍 Composição corporal</h2>${blocoComposicao(md,a.sexo)}</div>
   <div class="card"><h2>🎯 Metas do aluno</h2>${blocoMetas(md,S.metas)}<p class="sub" style="margin-top:6px">Metas são opcionais — defina só as que fizerem sentido para o aluno.</p></div></div>
   ${md.length?`<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">📈 Evolução</h2>${selCampo()}</div><div class="chartbox"><canvas id="cEvol"></canvas></div></div>`:''}
