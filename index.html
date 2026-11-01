@@ -314,7 +314,14 @@ async function sair(){ await Auth.logout(); if(MODE==='demo') telaLogin(); }
 async function entrar(id){
   try{
     const p=await Store.get('usuarios',id);
-    if(!p){ toast('Este login não tem perfil no sistema.',1); await Auth.logout(); return telaLogin(); }
+    if(!p){
+      await Auth.logout(); telaLogin();
+      abrirModal(`<h2>Login sem perfil no sistema</h2><p class="sub" style="margin-bottom:12px">A senha está certa, mas falta o documento do perfil no Firestore. Crie na coleção <b>usuarios</b> um documento com este ID:</p>
+        <div class="pix" style="margin-bottom:10px">${esc(id)}</div>
+        <p class="sub">Campos (todos do tipo string): <b>papel</b> = superadmin · <b>nome</b> = seu nome · <b>email</b> = seu e-mail</p>
+        <div class="mfoot"><button class="btn ghost" data-v="${esc(id)}" onclick="copiar(this.dataset.v)">Copiar ID</button><button class="btn p" onclick="fecharModal()">Entendi</button></div>`);
+      return;
+    }
     S.perfil={uid:id,...p};
     S.sis=(await Store.get('config','sistema'))||{};
     if(p.papel==='superadmin') return iniciarSuper();
