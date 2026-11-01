@@ -145,7 +145,8 @@ const FIREBASE_CONFIG = {
 */
 const TOLERANCIA_DIAS = 5; // dias de atraso da academia antes de bloquear o acesso
 
-const MODE = FIREBASE_CONFIG ? 'firebase' : 'demo';
+// Link com ?demo (ex.: .../fitgestor/?demo) abre a demonstração para clientes testarem, sem tocar no Firebase
+const MODE = (FIREBASE_CONFIG && !/[?&]demo\b/.test(location.search)) ? 'firebase' : 'demo';
 let fdb = null, fauth = null, mem = null;
 const S = { perfil:null, acad:null, sis:{}, charts:[], refresh:()=>{} };
 
@@ -188,7 +189,7 @@ const lerForm = f => Object.fromEntries(new FormData(f));
 const ss = { get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}}, del:k=>{try{sessionStorage.removeItem(k)}catch(e){}} };
 const P = sub => `academias/${S.acad.id}/${sub}`;
 const kpi = (l,v,ic,cor) => `<div class="card kpi"><div class="l">${ic||''} ${l}</div><div class="v" style="${cor?'color:'+cor:''}">${v}</div></div>`;
-const demoBar = () => MODE==='demo' ? `<div class="dbar">Modo demonstração — os dados ficam só neste navegador. Configure o Firebase para usar de verdade.</div>` : '';
+const demoBar = () => MODE==='demo' ? `<div class="dbar">${FIREBASE_CONFIG?'Demonstração do FitGestor — teste à vontade, os dados são de exemplo. <a href="https://wa.me/5583921418988?text='+encodeURIComponent('Olá Jefferson! Testei o FitGestor e quero para minha academia.')+'" target="_blank" style="color:#111;text-decoration:underline">Quero para minha academia</a>':'Modo demonstração — os dados ficam só neste navegador. Configure o Firebase para usar de verdade.'}</div>` : '';
 
 function toast(msg, err){ document.querySelectorAll('.toast').forEach(t=>t.remove()); const t=document.createElement('div'); t.className='toast'+(err?' err':''); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), err?4500:2600); }
 function abrirModal(html, wide){ fecharModal(); const o=document.createElement('div'); o.className='overlay'; o.innerHTML=`<div class="modal ${wide?'wide':''}">${html}</div>`; o.addEventListener('mousedown',e=>{ if(e.target===o) fecharModal(); }); document.body.appendChild(o); const f=o.querySelector('input:not([type=hidden])'); if(f) setTimeout(()=>f.focus(),50); return o.querySelector('.modal'); }
