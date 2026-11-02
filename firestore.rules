@@ -32,10 +32,20 @@ service cloud.firestore {
       allow create: if isSuper()
         || (isStaff(request.resource.data.academiaId) && request.resource.data.papel == 'aluno');
       allow update: if isSuper()
+        // a própria pessoa só pode gravar o aceite dos termos no seu perfil
+        || (request.auth.uid == uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aceite']))
         || (isStaff(resource.data.academiaId) && resource.data.papel == 'aluno'
             && request.resource.data.papel == 'aluno'
             && request.resource.data.academiaId == resource.data.academiaId);
       allow delete: if isSuper() || (isStaff(resource.data.academiaId) && resource.data.papel == 'aluno');
+    }
+
+    // Registro dos aceites dos termos: cada pessoa grava só o próprio; ninguém altera nem apaga (prova)
+    match /aceites/{id} {
+      allow create: if logado() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.academiaId == perfil().academiaId;
+      allow read: if isSuper() || isStaff(resource.data.academiaId);
+      allow update, delete: if false;
     }
 
     match /academias/{a} {

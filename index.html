@@ -81,6 +81,12 @@ tr.click{cursor:pointer} tr.click:hover td{background:#ffffff06}
 .mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
 .mini>div{background:var(--bg2);border-radius:10px;padding:10px}
 .mini .sub{font-size:11.5px}
+.termos{max-height:52vh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-size:13.5px;line-height:1.65}
+.termos h3{font-size:15px;margin-bottom:2px}.termos h4{font-size:13.5px;color:var(--acc);margin:16px 0 4px}
+.termos p,.termos li{color:#cdd3e0;margin-bottom:6px}.termos ul{padding-left:20px}
+.aceite{display:flex;gap:10px;align-items:flex-start;color:var(--txt);font-size:13.5px;margin:10px 0 0;cursor:pointer}
+.aceite input{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--acc)}
+.aceite.off{opacity:.45;cursor:not-allowed}
 .spin{display:inline-block;width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}@keyframes sp{to{transform:rotate(360deg)}}
 .prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden}
 .prog i{display:block;height:100%;background:var(--acc);transition:width .3s}
@@ -329,7 +335,7 @@ function telaLogin(){
       <div style="margin-bottom:12px"><label>E-mail</label><input name="email" type="email" required autocomplete="username"></div>
       <div style="margin-bottom:16px"><label>Senha</label><input name="senha" type="password" required autocomplete="current-password"></div>
       <button class="btn p" style="width:100%;justify-content:center;padding:12px">Entrar</button>
-      <p style="text-align:center;margin-top:12px"><a class="sub" style="cursor:pointer" onclick="esqueciSenha()">Esqueci minha senha</a></p>
+      <p style="text-align:center;margin-top:12px"><a class="sub" style="cursor:pointer" onclick="esqueciSenha()">Esqueci minha senha</a> · <a class="sub" style="cursor:pointer" onclick="verTermos()">Termos e privacidade</a></p>
     </form></div>
     ${MODE==='demo'?`<div class="demo"><b>Teste com um clique:</b>
       <div class="row" style="margin-top:10px">
@@ -368,10 +374,119 @@ async function entrar(id){
     S.acad=await Store.get('academias',p.academiaId);
     if(!S.acad){ toast('Academia não encontrada.',1); await Auth.logout(); return telaLogin(); }
     if(acadBloqueada(S.acad)) return telaBloqueio();
-    if(p.papel==='aluno') return iniciarAluno();
-    iniciarAdmin();
+    if(!termosOk(S.perfil)) return telaTermos();
+    seguirPapel();
   }catch(e){ console.error(e); toast('Erro ao entrar: '+erroAuth(e),1); telaLogin(); }
 }
+
+/* ======================= TERMOS DE USO E LGPD ======================= */
+// Ao mudar o texto dos termos, troque a versão: todos terão que aceitar de novo no próximo acesso.
+const TERMOS_VERSAO='1.0', TERMOS_DATA='02/11/2026';
+const DEF_CONTRATO={fornecedor:'Jefferson Ramalho',documento:'',emailPrivacidade:'jeffersonramalhopb@gmail.com',foro:'Mauriti/CE'};
+const termosOk=p=>p.papel==='superadmin'||((p.aceite&&p.aceite.versao)===TERMOS_VERSAO);
+const seguirPapel=()=>S.perfil.papel==='aluno'?iniciarAluno():iniciarAdmin();
+function ctxTermos(){
+  const s={...DEF_CONTRATO}; Object.entries(S.sis||{}).forEach(([k,v])=>{ if(v!==''&&v!=null) s[k]=v; });
+  return {sist:esc(s.nome||'FitGestor'),forn:esc(s.fornecedor),doc:esc(s.documento),mail:esc(s.emailPrivacidade),foro:esc(s.foro),acad:esc((S.acad&&S.acad.nome)||'a academia')};
+}
+function termosAcademia(){
+  const c=ctxTermos();
+  return `<h3>TERMOS DE USO E CONTRATO DE LICENÇA — ${c.sist}</h3><p class="sub">Versão ${TERMOS_VERSAO} · vigente desde ${TERMOS_DATA}</p>
+  <p>Este contrato é celebrado entre <b>${c.forn}</b>${c.doc?`, inscrito(a) sob o nº ${c.doc}`:''}, fornecedor do sistema ${c.sist} ("FORNECEDOR"), e a academia ou pessoa responsável que realiza o cadastro e o aceite eletrônico ("ACADEMIA"). O aceite eletrônico tem validade jurídica e fica registrado com data, hora e versão destes termos.</p>
+  <h4>1. Objeto</h4><p>Licença de uso, não exclusiva e intransferível, do sistema ${c.sist} por assinatura (software como serviço), para gestão de alunos, mensalidades, avaliações físicas e treinos. O sistema, o código e a marca continuam sendo propriedade do FORNECEDOR.</p>
+  <h4>2. Acesso e contas</h4><p>A ACADEMIA é responsável por manter em sigilo seus logins e senhas, pelos acessos que cria para equipe e alunos e por tudo o que for feito com eles. Qualquer uso indevido deve ser comunicado imediatamente ao FORNECEDOR.</p>
+  <h4>3. Pagamento, suspensão e cancelamento</h4><p>O uso é cobrado por mensalidade, no valor e vencimento combinados. Após ${TOLERANCIA_DIAS} dias de atraso, o acesso da ACADEMIA e de seus alunos pode ser suspenso automaticamente até a regularização. A ACADEMIA pode cancelar quando quiser, sem multa, deixando de pagar a mensalidade seguinte. Após o cancelamento, ou suspensão por mais de 90 dias, os dados poderão ser excluídos definitivamente; antes disso, a ACADEMIA pode pedir uma cópia.</p>
+  <h4>4. Responsabilidades da ACADEMIA</h4><ul>
+  <li>Cadastrar dados verdadeiros e mantê-los atualizados.</li>
+  <li>Informar os alunos sobre o uso do sistema e obter o consentimento deles para o tratamento de seus dados, inclusive dados de saúde (anamnese, PAR-Q e medidas), conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).</li>
+  <li>Garantir que avaliações físicas e treinos sejam feitos ou revisados por profissional de Educação Física habilitado (CREF), exigindo liberação médica quando necessário.</li>
+  <li>Usar o sistema de acordo com a lei, sem cadastrar dados de pessoas sem autorização.</li></ul>
+  <h4>5. Inteligência artificial</h4><p>Treinos e análises gerados por IA são sugestões de apoio, podem conter erros e <b>não substituem a avaliação de um profissional habilitado</b>. A ACADEMIA deve revisar todo conteúdo antes de entregá-lo ao aluno. O FORNECEDOR não se responsabiliza por lesões ou danos decorrentes de treinos aplicados sem essa revisão. Para gerar sugestões, a IA (Google Gemini) recebe apenas dados de treino e saúde, sem nome, telefone ou e-mail do aluno.</p>
+  <h4>6. Proteção de dados (LGPD)</h4><p>Quanto aos dados dos alunos, a ACADEMIA é a <b>controladora</b> e o FORNECEDOR é o <b>operador</b>: trata os dados somente para prestar o serviço, conforme as instruções da ACADEMIA, sem vendê-los nem compartilhá-los para outros fins.</p><ul>
+  <li>Os dados ficam armazenados na plataforma Google Firebase, com acesso por login, conexão criptografada e regras que separam os dados de cada academia.</li>
+  <li>A infraestrutura é fornecida pelo Google (Firebase e Gemini), que pode processar dados fora do Brasil com as garantias previstas na LGPD.</li>
+  <li>Em caso de incidente de segurança que possa trazer risco aos titulares, o FORNECEDOR avisará a ACADEMIA em prazo razoável.</li>
+  <li>Pedidos dos alunos (acesso, correção ou exclusão de dados) devem ser atendidos pela ACADEMIA, com apoio do FORNECEDOR quando necessário.</li></ul>
+  <h4>7. Disponibilidade e limitação de responsabilidade</h4><p>O FORNECEDOR se empenha em manter o sistema disponível e corrigir falhas, mas não garante funcionamento ininterrupto, pois depende de internet e de serviços de terceiros (como o Google). O FORNECEDOR não responde por lucros cessantes, por perda de dados causada por uso indevido das contas, nem por decisões tomadas com base nas informações do sistema. Em qualquer caso, a responsabilidade do FORNECEDOR fica limitada ao valor pago pela ACADEMIA nos últimos 3 (três) meses.</p>
+  <h4>8. Alterações</h4><p>Estes termos podem ser atualizados. Nesse caso, a nova versão será apresentada no próximo acesso e o uso continuado dependerá de novo aceite.</p>
+  <h4>9. Contato e foro</h4><p>Dúvidas e pedidos sobre dados: ${c.mail}. Fica eleito o foro da comarca de ${c.foro} para resolver questões deste contrato, ressalvadas as hipóteses previstas em lei.</p>`;
+}
+function termosAluno(){
+  const c=ctxTermos();
+  return `<h3>TERMO DE USO E CONSENTIMENTO — PAINEL DO ALUNO</h3><p class="sub">Versão ${TERMOS_VERSAO} · vigente desde ${TERMOS_DATA}</p>
+  <p>Este painel é oferecido pela <b>${c.acad}</b> ("ACADEMIA") por meio do sistema ${c.sist}, fornecido por ${c.forn}. Ao aceitar, você declara que leu e concorda com as condições abaixo.</p>
+  <h4>1. Quem cuida dos seus dados</h4><p>A ACADEMIA é a responsável (controladora) pelos seus dados. O ${c.sist} é a ferramenta usada pela ACADEMIA e trata os dados apenas para prestar esse serviço.</p>
+  <h4>2. Dados tratados</h4><ul>
+  <li>Identificação e contato: nome, data de nascimento, sexo, telefone/WhatsApp e e-mail.</li>
+  <li>Financeiros: plano, mensalidades e pagamentos.</li>
+  <li>Saúde e físicos (dados sensíveis): anamnese, PAR-Q, doenças, medicamentos, lesões, medidas corporais e avaliações.</li>
+  <li>Treinos e registro dos treinos que você conclui.</li></ul>
+  <h4>3. Para que usamos</h4><p>Matrícula e cobrança das mensalidades; montar, ajustar e acompanhar seus treinos com segurança; mostrar sua evolução; enviar avisos, fichas e cobranças pelo WhatsApp.</p>
+  <h4>4. Consentimento para dados de saúde e uso de IA</h4><p>Você autoriza, de forma específica e destacada, o uso dos seus dados de saúde para as finalidades acima (art. 11, I, da LGPD). A ACADEMIA pode usar inteligência artificial (Google Gemini) para sugerir treinos e analisar sua evolução; nesse caso, a IA recebe apenas dados de treino e saúde, <b>sem seu nome, telefone ou e-mail</b>, e toda sugestão é revisada pelo professor.</p>
+  <h4>5. Seus compromissos</h4><ul>
+  <li>Informar à ACADEMIA, com verdade, suas condições de saúde e qualquer mudança nelas.</li>
+  <li>Procurar avaliação médica quando indicado e apresentar liberação quando solicitada.</li>
+  <li>Seguir as orientações do professor e parar o exercício se sentir dor, tontura ou mal-estar, avisando a equipe.</li>
+  <li>Não compartilhar seu login e senha.</li></ul>
+  <h4>6. Seus direitos (LGPD)</h4><p>A qualquer momento você pode pedir para ver, corrigir ou excluir seus dados, saber com quem foram compartilhados e revogar este consentimento, falando com a recepção da ACADEMIA${c.mail?` ou pelo e-mail ${c.mail}`:''}. A revogação pode impedir o uso do painel e a prescrição de treinos pelo sistema.</p>
+  <h4>7. Segurança e guarda</h4><p>Os dados ficam em ambiente protegido por login e conexão criptografada (Google Firebase) e são mantidos enquanto você for aluno e pelo prazo necessário para cumprir obrigações legais, sendo excluídos depois, a pedido.</p>
+  <h4>8. Atualizações</h4><p>Se este termo mudar, você verá a nova versão no próximo acesso.</p>`;
+}
+const itensAceite=papel=>papel==='aluno'
+  ?['Li e aceito o Termo de Uso do painel do aluno.','Autorizo o uso dos meus dados de saúde (anamnese, PAR-Q e medidas) para montar e acompanhar meus treinos, inclusive com apoio de IA, conforme o item 4.']
+  :[`Li e aceito os Termos de Uso e o Contrato de Licença do ${S.sis.nome||'FitGestor'}.`,'Declaro que tenho poderes para aceitar em nome da academia e que vou obter o consentimento dos alunos para o uso dos dados deles, inclusive de saúde.'];
+async function hashTexto(t){ try{ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return ''; } }
+function telaTermos(){
+  limparCharts(); fecharModal();
+  const papel=S.perfil.papel==='aluno'?'aluno':'admin', itens=itensAceite(papel), atualizou=!!(S.perfil.aceite&&S.perfil.aceite.versao);
+  app().innerHTML=`${demoBar()}<div class="login" style="place-items:start center;padding-top:32px"><div class="lbox" style="max-width:760px">
+    <div class="logo" style="justify-content:center;font-size:24px"><span class="ic">💪</span>Fit<b>Gestor</b></div>
+    <div class="card">
+      <h1 style="font-size:20px">📜 ${atualizou?'Os termos foram atualizados':'Termos de uso e privacidade'}</h1>
+      <p class="sub" style="margin-bottom:14px">Olá, ${esc(primeiroNome(S.perfil.nome))}! Para ${atualizou?'continuar usando':'começar a usar'} o sistema, leia e aceite os termos abaixo.</p>
+      <div class="termos" id="txtTermos">${papel==='aluno'?termosAluno():termosAcademia()}</div>
+      <p class="sub" id="dicaRolar" style="font-size:12px;margin-top:8px">⬇️ Role o texto até o final para liberar o aceite.</p>
+      ${itens.map((t,i)=>`<label class="aceite off"><input type="checkbox" class="ckTermo" disabled>${esc(t)}</label>`).join('')}
+      <div class="mfoot" style="justify-content:space-between"><button class="btn ghost sm" onclick="imprimirTermos('${papel}')">🖨️ Imprimir / PDF</button>
+        <div class="row"><button class="btn ghost" onclick="recusarTermos()">Não aceito</button><button class="btn p" id="btAceitar" disabled onclick="aceitarTermos(this)">Aceitar e entrar</button></div></div>
+    </div></div></div>`;
+  const box=$('#txtTermos'), cks=[...document.querySelectorAll('.ckTermo')], bt=$('#btAceitar');
+  const liberar=()=>{ cks.forEach(c=>{ c.disabled=false; c.parentElement.classList.remove('off'); }); $('#dicaRolar').textContent='✅ Agora marque as opções para aceitar.'; };
+  const fim=()=>box.scrollTop+box.clientHeight>=box.scrollHeight-24;
+  box.addEventListener('scroll',()=>{ if(fim()) liberar(); });
+  if(fim()) liberar();
+  cks.forEach(c=>c.addEventListener('change',()=>{ bt.disabled=!cks.every(x=>x.checked); }));
+}
+async function aceitarTermos(btn){
+  btn.disabled=true; btn.textContent='Registrando...';
+  try{
+    const p=S.perfil, papel=p.papel==='aluno'?'aluno':'admin', data=new Date().toISOString();
+    const hash=await hashTexto($('#txtTermos').innerText);
+    const ac={versao:TERMOS_VERSAO,data,hash};
+    await Store.set('usuarios',p.uid,{aceite:ac});
+    await Store.add('aceites',{uid:p.uid,papel,nome:p.nome||'',email:p.email||'',academiaId:p.academiaId||'',academia:S.acad?S.acad.nome:'',alunoId:p.alunoId||'',versao:TERMOS_VERSAO,data,hash,itens:itensAceite(papel),navegador:navigator.userAgent.slice(0,180)});
+    S.perfil.aceite=ac; toast('Termos aceitos. Bem-vindo(a)!'); seguirPapel();
+  }catch(e){
+    console.error(e);
+    // Regras do Firestore ainda não atualizadas: não trava o uso, mas avisa
+    if(String(e&&e.code||'').includes('permission-denied')){ if(S.perfil.papel!=='aluno') toast('Aceite não registrado: o dono do sistema precisa publicar as novas regras do Firestore.',1); seguirPapel(); return; }
+    toast('Não foi possível registrar o aceite: '+erroAuth(e),1); btn.disabled=false; btn.textContent='Aceitar e entrar';
+  }
+}
+async function recusarTermos(){
+  if(!confirm('Sem aceitar os termos não é possível usar o sistema. Deseja sair?')) return;
+  await sair();
+}
+function imprimirTermos(papel){
+  const w=window.open('','_blank'); if(!w) return toast('Permita pop-ups para imprimir.',1);
+  w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Termos — ${esc(S.sis.nome||'FitGestor')}</title><style>body{font-family:Arial,sans-serif;max-width:780px;margin:24px auto;padding:0 16px;font-size:13px;line-height:1.55;color:#111}h3{font-size:16px}h4{margin:16px 0 4px}.sub{color:#555}button{padding:8px 16px;margin-bottom:12px;cursor:pointer}@media print{button{display:none}}</style></head><body><button onclick="print()">🖨️ Imprimir / Salvar em PDF</button>${papel==='aluno'?termosAluno():termosAcademia()}</body></html>`);
+  w.document.close();
+}
+function verTermos(){
+  const m=abrirModal(`<h2>📜 Termos de uso e privacidade</h2><div class="chips" style="margin-top:10px"><a class="chip on" data-t="admin">Academias</a><a class="chip" data-t="aluno">Alunos</a></div><div class="termos" id="tvTermos">${termosAcademia()}</div><div class="mfoot"><button class="btn p" onclick="fecharModal()">Fechar</button></div>`,true);
+  m.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ m.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c)); $('#tvTermos').innerHTML=c.dataset.t==='aluno'?termosAluno():termosAcademia(); $('#tvTermos').scrollTop=0; });
+}
+const fmtDH=iso=>{ try{ return new Date(iso).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}); }catch(e){ return iso; } };
 
 /* ======================= navegação ======================= */
 const VIEWS={}, ABAS={};
@@ -388,7 +503,7 @@ function shell(nav,titulo,aviso=''){
     <div class="logo"><span class="ic">💪</span>Fit<b>Gestor</b></div>
     <div class="acad-name">${esc(titulo)}</div>
     <nav class="nav">${nav.map(([k,i,t])=>`<a data-v="${k}" onclick="go('${k}')">${i} ${t}</a>`).join('')}<a onclick="sair()">🚪 Sair</a></nav>
-    <div class="foot">${esc(S.perfil.nome||'')}<br>${esc(S.perfil.email||'')}</div>
+    <div class="foot">${esc(S.perfil.nome||'')}<br>${esc(S.perfil.email||'')}<br><a style="cursor:pointer;text-decoration:underline" onclick="verTermos()">Termos e privacidade</a></div>
   </aside><main class="main">${aviso}<div id="view"></div></main></div>`;
 }
 function grafico(id,labels,ds){
@@ -412,7 +527,16 @@ const linkCobranca=(a,x)=>wa(a.telefone,`Olá, ${primeiroNome(a.nome)}! Tudo bem
 const linkRecibo=(a,x)=>wa(a.telefone,`✅ *Recibo — ${S.acad.nome}*\n\nRecebemos de ${a.nome} o valor de ${R(x.valor)} referente à mensalidade de ${nomeMes(x.competencia)}.\nPago em ${fmtD(x.pagoEm)} (${x.forma}).\n\nObrigado e bons treinos! 💪`);
 
 /* ======================= DONO DO SISTEMA ======================= */
-const NAV_SUPER=[['academias','🏢','Academias'],['sistema','⚙️','Configurações']];
+const NAV_SUPER=[['academias','🏢','Academias'],['aceites','📜','Aceites dos termos'],['sistema','⚙️','Configurações']];
+VIEWS.aceites=async el=>{
+  const l=(await Store.list('aceites')).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  el.innerHTML=`<div class="top"><div><h1>Aceites dos termos</h1><p class="sub">Registro de quem aceitou os termos, quando e qual versão. Ninguém consegue alterar ou apagar esses registros.</p></div><button class="btn ghost" onclick="verTermos()">📜 Ver os termos</button></div>
+  <div class="cards">${kpi('Aceites registrados',l.length,'📜')}${kpi('Academias',l.filter(x=>x.papel!=='aluno').length,'🏢')}${kpi('Alunos',l.filter(x=>x.papel==='aluno').length,'🙋')}${kpi('Versão atual',TERMOS_VERSAO,'🏷️')}</div>
+  <div class="card tbl" style="padding:6px 10px">${l.length?`<table><thead><tr><th>Data e hora</th><th>Quem</th><th>Tipo</th><th>Academia</th><th>Versão</th><th>Código do texto</th></tr></thead><tbody>
+  ${l.map(x=>`<tr><td>${fmtDH(x.data)}</td><td><b>${esc(x.nome)}</b><div class="sub">${esc(x.email)}</div></td><td>${x.papel==='aluno'?'Aluno':'Academia'}</td><td>${esc(x.academia||'—')}</td><td>${esc(x.versao)}</td><td class="sub" style="font-family:monospace;font-size:11.5px" title="${esc(x.hash)}">${esc((x.hash||'').slice(0,12))}${x.hash?'…':'—'}</td></tr>`).join('')}
+  </tbody></table>`:'<div class="empty">Nenhum aceite registrado ainda. Eles aparecem aqui quando academias e alunos entram no sistema.</div>'}</div>
+  <p class="sub" style="margin-top:12px">O código do texto é uma impressão digital (SHA-256) do termo exatamente como foi exibido: prova que a pessoa aceitou aquele texto.</p>`;
+};
 function iniciarSuper(){ shell(NAV_SUPER,'Painel do dono do sistema'); go('academias'); }
 
 VIEWS.academias=async el=>{
@@ -495,6 +619,13 @@ VIEWS.sistema=async el=>{
     <div><label>Sua chave Pix (para receber das academias)</label><input name="pix" value="${esc(s.pix)}"></div>
     <div><label>Seu WhatsApp (suporte e comprovantes)</label><input name="whatsapp" value="${esc(s.whatsapp)}"></div>
     <div><label>Mensalidade padrão (R$)</label><input type="number" step="0.01" name="valorPadrao" value="${s.valorPadrao||99.9}"></div>
+  </div>
+  <div class="sec">📜 Dados que aparecem no contrato</div>
+  <div class="fg">
+    <div><label>Seu nome ou razão social</label><input name="fornecedor" value="${esc(s.fornecedor||DEF_CONTRATO.fornecedor)}"></div>
+    <div><label>CPF ou CNPJ (opcional)</label><input name="documento" value="${esc(s.documento)}"></div>
+    <div><label>E-mail para assuntos de dados</label><input type="email" name="emailPrivacidade" value="${esc(s.emailPrivacidade||DEF_CONTRATO.emailPrivacidade)}"></div>
+    <div><label>Cidade do foro</label><input name="foro" value="${esc(s.foro||DEF_CONTRATO.foro)}"></div>
   </div><div class="mfoot"><button class="btn p">Salvar</button></div></form></div>`;
   onSubmit($('#cfgSis'),async d=>{ d.valorPadrao=num(d.valorPadrao)||0; await Store.set('config','sistema',d); S.sis={...S.sis,...d}; toast('Configurações salvas!'); go('sistema'); });
   onSubmit($('#cfgIA'),async d=>{ await Store.set('config','ia',{chave:d.chave.trim(),modelo:d.modelo.trim()||'gemini-flash-latest'}); toast('Chave da IA salva! Clique em “Testar IA”.'); go('sistema'); });
@@ -681,7 +812,10 @@ async function fichaCompleta(){
   <table class="g"><tr><th>Medida</th>${ult.map(m=>`<th>${fmtD(m.data)}</th>`).join('')}${temMeta?'<th>Meta</th>':''}</tr>${CAMPOS.filter(([k])=>ult.some(m=>!isNaN(num(m[k])))).map(([k,t,un])=>`<tr><td>${t} (${un})</td>${ult.map(m=>`<td>${isNaN(num(m[k]))?'—':fmtN(m[k])}</td>`).join('')}${temMeta?`<td>${isNaN(num(mt[k]))?'':fmtN(mt[k])}</td>`:''}</tr>`).join('')}</table>`:'<p>Nenhuma avaliação registrada.</p>'}
   <h2>Treinos</h2>
   ${ts.length?ts.map(t=>`<h3>${esc(t.nome)}${t.dias?` <span style="font-weight:normal">(${esc(t.dias)})</span>`:''}</h3><table class="g"><tr><th>#</th><th>Exercício</th><th>Séries</th><th>Reps</th><th>Carga</th><th>Desc.</th><th>Dica</th></tr>${(t.exercicios||[]).map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.nome)}</td><td>${esc(x.series)}</td><td>${esc(x.reps)}</td><td>${esc(x.carga)}</td><td>${esc(x.descanso)}</td><td>${esc(x.dica)}</td></tr>`).join('')}</table>${t.obs?`<p>📝 ${esc(t.obs)}</p>`:''}`).join(''):'<p>Nenhum treino cadastrado.</p>'}
-  <div class="sig"><div>Aluno(a)</div><div>Professor(a) responsável · CREF</div></div></body></html>`;
+  <h2>Termo de consentimento (LGPD)</h2>
+  <p style="text-align:justify">Declaro que as informações de saúde prestadas nesta ficha são verdadeiras e que comunicarei à academia qualquer alteração. Autorizo a <b>${esc(S.acad.nome)}</b> a tratar meus dados pessoais, inclusive dados de saúde (anamnese, PAR-Q e medidas), exclusivamente para matrícula, cobrança, prescrição e acompanhamento dos meus treinos, conforme a Lei nº 13.709/2018 (LGPD). Estou ciente de que posso pedir acesso, correção ou exclusão dos meus dados e revogar este consentimento a qualquer momento, e de que devo seguir as orientações do professor e interromper o exercício em caso de dor, tontura ou mal-estar.</p>
+  <p>Local e data: ______________________________, ____/____/________</p>
+  <div class="sig"><div>Aluno(a)${a.nascimento&&idade(a.nascimento)<18?' ou responsável legal':''}</div><div>Professor(a) responsável · CREF</div></div></body></html>`;
   w.document.open(); w.document.write(html); w.document.close();
 }
 
@@ -1081,8 +1215,10 @@ async function gerarMes(comp){
 function msgAcesso(a,email,senha){ return `Olá, ${primeiroNome(a.nome)}! 💪 Seu acesso ao painel da ${S.acad.nome} está liberado.\n\n🔗 ${urlPainel()}\n📧 Login: ${email}${senha?`\n🔑 Senha: ${senha}`:''}\n\nLá você vê seus treinos, sua evolução e suas mensalidades.`; }
 ABAS.acesso=async(el,a)=>{
   if(a.uid){
+    let ac=null; try{ const us=await Store.get('usuarios',a.uid); ac=us&&us.aceite; }catch(e){}
+    const stTermo=ac?`<span class="badge ${ac.versao===TERMOS_VERSAO?'b-pago':'b-pendente'}">${ac.versao===TERMOS_VERSAO?'Aceitos':'Versão antiga'}</span> em ${fmtDH(ac.data)} · versão ${esc(ac.versao)}`:'<span class="badge b-pendente">Pendente</span> o aluno aceita no primeiro acesso';
     el.innerHTML=`<div class="card" style="max-width:580px"><h2>✅ Acesso liberado</h2><p class="sub" style="margin-bottom:14px">O aluno entra pelo mesmo endereço do sistema, com o e-mail e a senha cadastrados.</p>
-    <p><b>E-mail:</b> ${esc(a.email)}</p><p style="margin:6px 0 16px;word-break:break-all"><b>Link:</b> ${esc(urlPainel())}</p>
+    <p><b>E-mail:</b> ${esc(a.email)}</p><p style="margin-top:6px"><b>📜 Termos:</b> ${stTermo}</p><p style="margin:6px 0 16px;word-break:break-all"><b>Link:</b> ${esc(urlPainel())}</p>
     <div class="row">${a.telefone?`<a class="btn g" target="_blank" href="${wa(a.telefone,msgAcesso(a,a.email))}">📲 Reenviar acesso</a>`:''}<button class="btn ghost" onclick="redefinirSenhaAluno()">Redefinir senha</button><button class="btn d" onclick="removerAcesso()">Remover acesso</button></div></div>`;
     return;
   }
@@ -1130,7 +1266,7 @@ async function iniciarAluno(){
   if(!al){ toast('Cadastro de aluno não encontrado. Procure a academia.',1); await Auth.logout(); return telaLogin(); }
   S.al={aluno:al,treinos:ts.sort(porNome),medidas:md.sort(porData),mens:ms.sort((a,b)=>b.competencia.localeCompare(a.competencia)),regs:rg.sort((a,b)=>b.data.localeCompare(a.data))};
   S.feitos={};
-  app().innerHTML=`${demoBar()}<div class="ap"><div class="row" style="justify-content:space-between;margin-bottom:18px;flex-wrap:nowrap"><div><p class="sub">${esc(S.acad.nome)}</p><h1>Olá, ${esc(primeiroNome(al.nome))}! 💪</h1></div><button class="btn ghost sm" onclick="sair()">Sair</button></div><div id="view"></div></div>
+  app().innerHTML=`${demoBar()}<div class="ap"><div class="row" style="justify-content:space-between;margin-bottom:18px;flex-wrap:nowrap"><div><p class="sub">${esc(S.acad.nome)}</p><h1>Olá, ${esc(primeiroNome(al.nome))}! 💪</h1></div><button class="btn ghost sm" onclick="sair()">Sair</button></div><div id="view"></div><p style="text-align:center;margin-top:22px"><a class="sub" style="cursor:pointer;font-size:12px" onclick="verTermos()">Termos de uso e privacidade</a></p></div>
   <nav class="bnav"><a data-v="aTreinos" onclick="go('aTreinos')"><span>🏋️</span>Treinos</a><a data-v="aEvolucao" onclick="go('aEvolucao')"><span>📈</span>Evolução</a><a data-v="aPagamentos" onclick="go('aPagamentos')"><span>💳</span>Pagamentos</a></nav>`;
   go('aTreinos');
 }

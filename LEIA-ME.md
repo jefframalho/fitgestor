@@ -67,6 +67,20 @@ Na ficha de cada aluno, a academia tem:
 
 A IA recebe só os dados de saúde e treino. Nome, telefone e e-mail do aluno **não** são enviados.
 
+## Termos de uso e LGPD (aceite eletrônico)
+
+No primeiro acesso, cada academia e cada aluno precisa ler e aceitar os termos antes de usar o sistema:
+- **Academia:** Termos de Uso e Contrato de Licença, com pagamento, suspensão, responsabilidades, uso da IA, LGPD (academia = controladora, você = operador) e limitação de responsabilidade.
+- **Aluno:** Termo de Uso e Consentimento, com os dados tratados, o consentimento específico para dados de saúde (art. 11 da LGPD), o uso de IA, os compromissos do aluno e os direitos dele.
+
+Os botões de aceite só liberam depois que a pessoa rola o texto até o final. Cada aceite grava **data, hora, versão e o código SHA-256 do texto aceito**. Ninguém consegue alterar ou apagar esse registro, nem você. Veja tudo em **📜 Aceites dos termos**, no painel do dono.
+
+- Seu nome/CNPJ, e-mail e cidade do foro ficam em **Configurações → Dados que aparecem no contrato**.
+- Para mudar o texto, edite as funções `termosAcademia()` e `termosAluno()` e troque `TERMOS_VERSAO` (ex.: `'1.1'`). Todos aceitam de novo no próximo acesso.
+- A **📄 Ficha completa** impressa do aluno tem um termo de consentimento para assinar no papel, útil para quem não usa o painel.
+
+> Os termos são um modelo bem completo, mas vale pedir a um advogado para revisar antes de vender em escala.
+
 ## Como funciona a cobrança das academias
 
 - Cada academia tem **valor** e **vencimento**. Ao clicar em **Receber**, o vencimento avança 1, 2, 3, 6 ou 12 meses.
