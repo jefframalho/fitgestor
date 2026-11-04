@@ -67,7 +67,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:#ffffff06}
 .toast.err{background:var(--bad);color:#fff}
 .empty{color:var(--mut);text-align:center;padding:30px}
 .av{width:36px;height:36px;border-radius:50%;background:#2a3142;display:grid;place-items:center;font-weight:700;color:var(--acc);flex-shrink:0;font-size:13px}
-.ex{display:grid;grid-template-columns:2.2fr .6fr .6fr .7fr .7fr 1.6fr 34px;gap:6px;margin-bottom:6px}
+.ex{display:grid;grid-template-columns:2.2fr .6fr .6fr .7fr .7fr 1.6fr 62px 34px;gap:6px;margin-bottom:6px}.cj{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mut);white-space:nowrap;cursor:pointer}.cj input{width:auto;accent-color:var(--acc)}
 .checks{display:flex;flex-wrap:wrap;gap:6px}
 .checks label{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--txt);font-size:13px;cursor:pointer;margin:0}
 .checks input{width:auto;accent-color:var(--acc)}
@@ -109,6 +109,31 @@ tr.click{cursor:pointer} tr.click:hover td{background:#ffffff06}
 .exc.ok{opacity:.55}.exc.ok .nm{text-decoration:line-through}
 .ck{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;flex-shrink:0;font-weight:800;font-size:13px}
 .exc.ok .ck{background:var(--acc);border-color:var(--acc);color:#111}
+.thead{margin-bottom:12px}
+.iniciar{background:linear-gradient(135deg,#1d2a0b,#141a10);border:1px solid #3b4d14;border-radius:14px;padding:16px;margin-bottom:12px;text-align:center}
+.iniciar .btn{width:100%;justify-content:center;padding:14px;font-size:15px}
+.iniciar p{margin-top:10px;font-size:13px;color:var(--mut)}
+.exv{position:relative;display:flex;gap:12px;align-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;user-select:none}
+.exv.on{cursor:pointer}.exv .info{flex:1;min-width:0;padding-top:2px}
+.exv h3{font-size:16px;line-height:1.3;margin-bottom:8px}
+.exv .ln{font-size:13.5px;color:var(--mut);margin:3px 0}.exv .ln b{color:var(--txt);font-weight:600}.exv .ln.dica{font-size:12.5px;margin-top:6px}
+.exv .ck{position:absolute;top:10px;left:10px;width:26px;height:26px;background:var(--bg2);z-index:1}
+.exv.on .info{padding-left:30px}
+.exv.ok{opacity:.55}.exv.ok .nm{text-decoration:line-through}.exv.ok .ck{background:var(--acc);border-color:var(--acc);color:#111}
+.th{position:relative;flex:0 0 38%;max-width:180px;min-height:130px;border-radius:10px;overflow:hidden;background:#000;cursor:pointer}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9}
+.th .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff9;color:#111;display:grid;place-items:center;font-size:16px;padding-left:3px;backdrop-filter:blur(4px)}
+.combo{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.combo>b{font-size:15px}.combo .sub{margin-bottom:10px}
+.cbrow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}
+.cb{flex:0 0 82%;flex-direction:column;gap:0;scroll-snap-align:start;margin:0}
+.cb .cbh{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}.cb h3{margin-bottom:6px}
+.let{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--acc);color:#111;display:grid;place-items:center;font-weight:800}
+.cb .th{flex:none;max-width:none;width:100%;aspect-ratio:16/10;min-height:0;margin-top:8px}
+.crono{font-weight:700;font-variant-numeric:tabular-nums;color:var(--acc)}
+#descanso{position:fixed;left:16px;right:16px;bottom:84px;max-width:528px;margin:0 auto;background:var(--acc);color:#111;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:40;box-shadow:0 10px 30px #0008}
+#descanso span{font-weight:600}#descanso b{font-size:24px;font-variant-numeric:tabular-nums;flex:1}
+#descanso button{background:#111;color:var(--acc);border:0;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
 .dbar{background:var(--warn);color:#111;text-align:center;font-size:12.5px;padding:6px 10px;font-weight:600}
 .aviso{border-color:var(--warn);margin-bottom:16px}
 @media(max-width:820px){
@@ -251,7 +276,7 @@ const Auth = {
   apagarDemo(id){ if(MODE==='demo'){ delete mem.users[id]; salvarDemo(); } }
 };
 
-const LS='fitgestor_demo_v2';
+const LS='fitgestor_demo_v3';
 function salvarDemo(){ try{ localStorage.setItem(LS, JSON.stringify(mem)); }catch(e){} }
 function carregarDemo(){ try{ mem=JSON.parse(localStorage.getItem(LS)); }catch(e){} if(!mem||!mem.db){ mem=seed(); salvarDemo(); } }
 function resetDemo(){ if(!confirm('Apagar tudo e restaurar os dados de exemplo?')) return; mem=seed(); salvarDemo(); ss.del('fg_uid'); telaLogin(); toast('Dados de exemplo restaurados.'); }
@@ -277,9 +302,9 @@ function seed(){
     put(A+'mensalidades','mc'+id,{alunoId:id,competencia:m,valor,vencimento:vencDe(m,dia),pagoEm:(i===0||i===2)?h:'',forma:(i===0||i===2)?'Pix':''});
   });
   [[-60,82,1.75,22,100,92,98,34,56,'13/8',78],[-30,80.5,1.75,20.5,101,90,97,35,57,'12/8',74],[-2,79,1.75,19,102,88,96,36,58,'12/8',70]].forEach(([d,peso,altura,gordura,peito,cintura,quadril,bracoD,coxaD,pa,fc],i)=>put(A+'medidas','md'+i,{alunoId:'al1',data:addDias(h,d),peso,altura,gordura,peito,cintura,quadril,bracoD,bracoE:bracoD-0.5,coxaD,coxaE:coxaD-0.5,pa,fc}));
-  const T=(nome,dias,ex,obs)=>({alunoId:'al1',nome,dias,obs:obs||'',atualizadoEm:addDias(h,-5),exercicios:ex.map(([nome,series,reps,carga,descanso])=>({nome,series,reps,carga,descanso}))});
+  const T=(nome,dias,ex,obs)=>({alunoId:'al1',nome,dias,obs:obs||'',atualizadoEm:addDias(h,-5),exercicios:ex.map(([nome,series,reps,carga,descanso,conj])=>({nome,series,reps,carga,descanso,...(conj?{conj:true}:{})}))});
   put(A+'treinos','tA',T('Treino A — Peito e Tríceps','Seg / Qui',[['Supino reto com barra','4','10','40','60'],['Supino inclinado com halteres','3','12','16','60'],['Crucifixo na máquina','3','12','35','45'],['Tríceps no pulley','4','12','25','45'],['Tríceps francês','3','10','12','45']],'Aquecer 10 min na esteira antes.'));
-  put(A+'treinos','tB',T('Treino B — Costas e Bíceps','Ter / Sex',[['Puxada frontal','4','10','50','60'],['Remada baixa','4','10','45','60'],['Remada unilateral','3','12','18','45'],['Rosca direta','4','10','20','45'],['Rosca martelo','3','12','10','45']]));
+  put(A+'treinos','tB',T('Treino B — Costas e Bíceps','Ter / Sex',[['Puxada frontal','4','10','50','60'],['Remada baixa','4','10','45','60'],['Remada unilateral','3','12','18','45'],['Rosca direta','4','10','20',''],['Rosca martelo','3','12','10','60',1]]));
   put(A+'treinos','tC',T('Treino C — Pernas e Ombros','Qua / Sáb',[['Agachamento livre','4','10','50','90'],['Leg press 45°','4','12','140','60'],['Cadeira extensora','3','12','40','45'],['Mesa flexora','3','12','35','45'],['Desenvolvimento com halteres','4','10','14','60'],['Elevação lateral','3','15','8','45']],'Alongar ao final.'));
   [[-1,'tC'],[-2,'tB'],[-3,'tA'],[-5,'tC']].forEach(([d,t],i)=>put(A+'registros','rg'+i,{alunoId:'al1',treinoId:t,nome:{tA:'Treino A — Peito e Tríceps',tB:'Treino B — Costas e Bíceps',tC:'Treino C — Pernas e Ombros'}[t],data:addDias(h,d)}));
   return {db,users};
@@ -852,7 +877,7 @@ const btnVideo=(x,curto)=>videoId(x&&x.nome)?`<button type="button" class="btn s
 const descEx=x=>[x.series&&x.reps?`${x.series}x${x.reps}`:(x.series?x.series+' séries':(x.reps?x.reps+' reps':'')),x.carga?x.carga+(isNaN(x.carga)?'':' kg'):'',x.descanso?'descanso '+x.descanso+(isNaN(x.descanso)?'':'s'):''].filter(Boolean).join(' · ');
 function textoFicha(a,ts){
   let s=`🏋️ *${S.acad.nome}*\nOlá, ${primeiroNome(a.nome)}! Segue sua ficha de treino:\n`;
-  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); const v=linkVideo(x.nome); s+=`${i+1}. ${x.nome}${d?' — '+d:''}${x.dica?`\n   💡 ${x.dica}`:''}${v?`\n   ▶ ${v}`:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
+  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); const v=linkVideo(x.nome); s+=`${i+1}. ${x.conj&&i?'↳ (conjugado) ':''}${x.nome}${d?' — '+d:''}${x.dica?`\n   💡 ${x.dica}`:''}${v?`\n   ▶ ${v}`:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
   return s+`\n📱 Acompanhe no seu painel: ${urlPainel()}\nBons treinos! 💪`;
 }
 ABAS.treinos=async(el,a)=>{
@@ -864,25 +889,25 @@ ABAS.treinos=async(el,a)=>{
 };
 function cardTreino(t,a){
   return `<div class="card"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub" style="margin-bottom:6px">${esc(t.dias||'')}${t.atualizadoEm?' · atualizado em '+fmtD(t.atualizadoEm):''}</p>
-  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}${x.dica?' · 💡 '+esc(x.dica):''}</div></div>${btnVideo(x,true)}</div>`).join('')}
+  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${x.conj&&i?'<span style="color:var(--acc)" title="Conjugado com o de cima">↳ </span>':''}${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}${x.dica?' · 💡 '+esc(x.dica):''}</div></div>${btnVideo(x,true)}</div>`).join('')}
   ${t.obs?`<p class="sub" style="margin-top:8px">📝 ${esc(t.obs)}</p>`:''}
   <div class="row" style="margin-top:12px;gap:6px"><button class="btn sm ghost" onclick="editarTreino('${t.id}')">✏️ Editar</button><button class="btn sm ghost" onclick="copiarTreino('${t.id}')">⧉ Copiar para outro aluno</button>${a.telefone?`<a class="btn sm g" target="_blank" href="${wa(a.telefone,textoFicha(a,[t]))}">📲 Enviar</a>`:''}<button class="btn sm d" title="Excluir" onclick="excluirTreino('${t.id}')">🗑</button></div></div>`;
 }
-const linhaEx=(x={})=>`<div class="ex exrow"><input class="n" data-k="nome" list="dlEx" placeholder="Exercício" value="${esc(x.nome)}"><input data-k="series" placeholder="Séries" value="${esc(x.series)}"><input data-k="reps" placeholder="Reps" value="${esc(x.reps)}"><input data-k="carga" placeholder="Carga" value="${esc(x.carga)}"><input data-k="descanso" placeholder="Desc." value="${esc(x.descanso)}"><input class="dc" data-k="dica" placeholder="Dica (opcional)" value="${esc(x.dica)}"><button type="button" class="btn sm ghost" title="Remover" onclick="this.parentElement.remove()">✕</button></div>`;
+const linhaEx=(x={})=>`<div class="ex exrow"><input class="n" data-k="nome" list="dlEx" placeholder="Exercício" value="${esc(x.nome)}"><input data-k="series" placeholder="Séries" value="${esc(x.series)}"><input data-k="reps" placeholder="Reps" value="${esc(x.reps)}"><input data-k="carga" placeholder="Carga" value="${esc(x.carga)}"><input data-k="descanso" placeholder="Desc." value="${esc(x.descanso)}"><input class="dc" data-k="dica" placeholder="Dica (opcional)" value="${esc(x.dica)}"><label class="cj" title="Conjugado: fazer junto com o exercício de cima, sem descanso"><input type="checkbox" data-k="conj" ${x.conj?'checked':''}> Conj.</label><button type="button" class="btn sm ghost" title="Remover" onclick="this.parentElement.remove()">✕</button></div>`;
 function addEx(){ $('#exs').insertAdjacentHTML('beforeend',linhaEx()); const l=$('#exs').lastElementChild.querySelector('input'); l&&l.focus(); }
 function editarTreino(id){
   const letra='ABCDEFG'[S.treinos.length]||'';
   const t=id?S.treinos.find(x=>x.id===id):{nome:'Treino '+letra,exercicios:[{},{},{},{}]};
   const m=abrirModal(`<h2>${id?'Editar':'Novo'} treino — ${esc(S.aluno.nome)}</h2><form>
     <div class="fg"><div><label>Nome do treino *</label><input name="nome" required value="${esc(t.nome)}" placeholder="Treino A — Peito e Tríceps"></div><div><label>Dias da semana</label><input name="dias" value="${esc(t.dias)}" placeholder="Seg / Qui"></div></div>
-    <div class="ex exhead sub" style="margin:16px 0 4px;font-size:11.5px"><span>Exercício</span><span>Séries</span><span>Reps</span><span>Carga (kg)</span><span>Descanso (s)</span><span>Dica de execução</span><span></span></div>
+    <div class="ex exhead sub" style="margin:16px 0 4px;font-size:11.5px"><span>Exercício</span><span>Séries</span><span>Reps</span><span>Carga (kg)</span><span>Descanso (s)</span><span>Dica de execução</span><span>Conjugado</span><span></span></div>
     <div id="exs" style="margin-top:8px">${(t.exercicios||[]).map(linhaEx).join('')}</div>
     <button type="button" class="btn ghost sm" onclick="addEx()">+ Exercício</button>
     <div style="margin-top:14px"><label>Observações</label><textarea name="obs" rows="2" placeholder="Ex.: aquecer 10 min na esteira">${esc(t.obs)}</textarea></div>
     <datalist id="dlEx">${EXERCICIOS.map(e=>`<option value="${esc(e)}">`).join('')}</datalist>
     ${rodapeModal('Salvar treino')}</form>`,true);
   onSubmit(m,async(d,f)=>{
-    const exs=[...f.querySelectorAll('.exrow')].map(r=>{ const o={}; r.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=i.value.trim()); return o; }).filter(x=>x.nome);
+    const exs=[...f.querySelectorAll('.exrow')].map(r=>{ const o={}; r.querySelectorAll('[data-k]').forEach(i=>o[i.dataset.k]=i.type==='checkbox'?i.checked:i.value.trim()); if(!o.conj) delete o.conj; return o; }).filter(x=>x.nome);
     if(!exs.length) throw new Error('Adicione pelo menos um exercício.');
     const doc={alunoId:S.aluno.id,nome:d.nome.trim(),dias:d.dias.trim(),obs:d.obs.trim(),exercicios:exs,atualizadoEm:hoje()};
     if(id) await Store.set(P('treinos'),id,doc,false); else await Store.add(P('treinos'),doc);
@@ -1291,28 +1316,69 @@ async function iniciarAluno(){
   go('aTreinos');
 }
 const rotuloCurto=(n,k)=>{ const m=String(n).match(/treino\s+([A-Z0-9]+)/i); return m?'Treino '+m[1].toUpperCase():(String(n).length>18?String(n).slice(0,16)+'…':n||'Treino '+(k+1)); };
+/* ---------- treino do aluno (estilo ficha com vídeo) ---------- */
+const serieTxt=x=>x.series&&x.reps?`${x.series}x${x.reps}`:(x.series?x.series+' séries':(x.reps?x.reps+' reps':''));
+const cargaTxt=x=>x.carga?x.carga+(isNaN(x.carga)?'':' kg'):'';
+const descTxt=x=>x.descanso?x.descanso+(isNaN(x.descanso)?'':'s'):'';
+/* junta exercícios conjugados (bi-set / tri-set) em grupos */
+function gruposEx(exs){ const g=[]; (exs||[]).forEach((x,k)=>{ if(x.conj&&g.length) g[g.length-1].push(k); else g.push([k]); }); return g; }
+function thumbEx(x,cls){
+  const id=videoId(x.nome); if(!id) return '';
+  return `<div class="${cls}" data-n="${esc(x.nome)}" onclick="event.stopPropagation();verVideo(this.dataset.n)" title="Ver vídeo"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" onerror="this.remove()"><span class="play">▶</span></div>`;
+}
+const linhasEx=x=>[['Séries',serieTxt(x)],['Carga',cargaTxt(x)],['Intervalo',descTxt(x)]].filter(l=>l[1]).map(l=>`<p class="ln"><b>${l[0]}:</b> ${esc(l[1])}</p>`).join('')+(x.dica?`<p class="ln dica">💡 ${esc(x.dica)}</p>`:'');
+function cardEx(t,x,k,f,on,n){
+  const ok=f.includes(k);
+  return `<div class="exv ${ok?'ok':''} ${on?'on':''}" ${on?`onclick="marcarEx('${t.id}',${k},this,${n})"`:''}>${on?`<div class="ck">${ok?'✓':k+1}</div>`:''}<div class="info"><h3 class="nm">${esc(x.nome)}</h3>${linhasEx(x)}</div>${thumbEx(x,'th')}</div>`;
+}
+function grupoEx(t,ks,f,on,n){
+  const ex=t.exercicios;
+  return `<div class="combo"><b>Exercícios combinados</b><p class="sub">Alterne esses exercícios, sem descanso entre eles</p><div class="cbrow">${ks.map((k,j)=>{ const x=ex[k], ok=f.includes(k);
+    return `<div class="cb exv ${ok?'ok':''} ${on?'on':''}" ${on?`onclick="marcarEx('${t.id}',${k},this,${n})"`:''}><div class="cbh"><h3 class="nm">${esc(x.nome)}</h3><span class="let">${on&&ok?'✓':'ABCDE'[j]}</span></div>${linhasEx(x)}${thumbEx(x,'th tv')}</div>`; }).join('')}</div></div>`;
+}
 VIEWS.aTreinos=async(el,i)=>{
   const {treinos,regs}=S.al;
   const sem=regs.filter(r=>diasEntre(r.data,hoje())<7).length;
   const kpis=`<div class="cards" style="grid-template-columns:1fr 1fr;margin-bottom:16px">${kpi('Últimos 7 dias',sem+' treino'+(sem===1?'':'s'),'🔥')}${kpi('Total concluído',regs.length,'🏆')}</div>`;
   if(!treinos.length){ el.innerHTML=kpis+'<div class="card empty">Seu instrutor ainda não cadastrou seus treinos.</div>'; return; }
   if(i==null){ const u=regs[0]; const k=u?treinos.findIndex(t=>t.id===u.treinoId):-1; i=k<0?0:(k+1)%treinos.length; }
-  const t=treinos[i], f=S.feitos[t.id]||(S.feitos[t.id]=[]), n=(t.exercicios||[]).length;
-  el.innerHTML=kpis+`<div class="chips">${treinos.map((x,k)=>`<a class="chip ${k===i?'on':''}" onclick="go('aTreinos',${k})">${esc(rotuloCurto(x.nome,k))}</a>`).join('')}</div>
-  <div class="card" style="margin-bottom:12px"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub">${esc(t.dias||'')}${t.dias?' · ':''}${n} exercícios${regs[0]&&regs[0].treinoId!==t.id&&i===((treinos.findIndex(x=>x.id===regs[0].treinoId)+1)%treinos.length)?' · <b style="color:var(--acc)">próximo da sequência</b>':''}</p>${t.obs?`<p class="sub" style="margin-top:6px">📝 ${esc(t.obs)}</p>`:''}<div class="prog" style="margin-top:12px"><i id="pg" style="width:${n?f.length/n*100:0}%"></i></div><p class="sub" id="pgt" style="margin-top:4px;font-size:12px">${f.length} de ${n} feitos</p></div>
-  ${(t.exercicios||[]).map((x,k)=>`<div class="exc ${f.includes(k)?'ok':''}" onclick="marcarEx('${t.id}',${k},this,${n})"><div class="ck">${f.includes(k)?'✓':k+1}</div><div><div class="nm" style="font-weight:600">${esc(x.nome)}</div><div class="sub">${esc(descEx(x))}</div>${x.dica?`<div class="sub" style="font-size:12px;margin-top:2px">💡 ${esc(x.dica)}</div>`:''}</div><div style="margin-left:auto">${btnVideo(x)}</div></div>`).join('')}
-  <button class="btn p" style="width:100%;justify-content:center;padding:14px;margin-top:8px" onclick="concluirTreino('${t.id}',${i})">✅ Concluir treino</button>`;
+  const t=treinos[i], f=S.feitos[t.id]||(S.feitos[t.id]=[]), n=(t.exercicios||[]).length, on=S.emTreino&&S.emTreino.tid===t.id;
+  const prox=regs[0]&&regs[0].treinoId!==t.id&&i===((treinos.findIndex(x=>x.id===regs[0].treinoId)+1)%treinos.length);
+  el.innerHTML=(on?'':kpis)+`<div class="chips">${treinos.map((x,k)=>`<a class="chip ${k===i?'on':''}" onclick="go('aTreinos',${k})">${esc(rotuloCurto(x.nome,k))}</a>`).join('')}</div>
+  <div class="card thead"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub">${esc(t.dias||'')}${t.dias?' · ':''}${n} exercícios${prox?' · <b style="color:var(--acc)">próximo da sequência</b>':''}</p>${t.obs?`<p class="sub" style="margin-top:6px">📝 ${esc(t.obs)}</p>`:''}
+  ${on?`<div class="row" style="justify-content:space-between;margin-top:12px"><span class="sub" id="pgt">${f.length} de ${n} feitos</span><span class="crono" id="crono">⏱ 00:00</span></div><div class="prog" style="margin-top:6px"><i id="pg" style="width:${n?f.length/n*100:0}%"></i></div>`:''}</div>
+  ${on?'':`<div class="iniciar"><button class="btn p" onclick="iniciarTreino('${t.id}',${i})">▶ Iniciar treino</button><p>Você está no modo visualização. Toque em <b>Iniciar treino</b> para marcar os exercícios e contar o descanso.</p></div>`}
+  ${gruposEx(t.exercicios).map(g=>g.length>1?grupoEx(t,g,f,on,n):cardEx(t,t.exercicios[g[0]],g[0],f,on,n)).join('')}
+  ${on?`<button class="btn p" style="width:100%;justify-content:center;padding:14px;margin-top:8px" onclick="concluirTreino('${t.id}',${i})">✅ Concluir treino</button><button class="btn ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="sairTreino(${i})">Sair sem concluir</button>`:''}`;
+  if(on) tickCrono();
 };
+function iniciarTreino(tid,i){ S.emTreino={tid,inicio:Date.now()}; S.feitos[tid]=[]; go('aTreinos',i); window.scrollTo(0,0); }
+function sairTreino(i){ if(!confirm('Sair do treino sem concluir?')) return; S.emTreino=null; pararDescanso(); go('aTreinos',i); }
+function tickCrono(){ clearInterval(S._crono); const up=()=>{ const c=$('#crono'); if(!c||!S.emTreino){ clearInterval(S._crono); return; } const s=Math.floor((Date.now()-S.emTreino.inicio)/1000); c.textContent='⏱ '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }; up(); S._crono=setInterval(up,1000); }
+/* contagem do descanso depois de marcar um exercício */
+function pararDescanso(){ clearInterval(S._desc); const d=$('#descanso'); if(d) d.remove(); }
+function iniciarDescanso(seg){
+  pararDescanso(); if(!(seg>0)) return; let r=seg;
+  document.body.insertAdjacentHTML('beforeend',`<div id="descanso"><span>Descanso</span><b id="dsT"></b><button onclick="pararDescanso()">Pular</button></div>`);
+  const up=()=>{ const e=$('#dsT'); if(!e){ clearInterval(S._desc); return; } e.textContent=Math.floor(r/60)+':'+String(r%60).padStart(2,'0'); if(r<=0){ clearInterval(S._desc); try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){} e.textContent='Bora!'; setTimeout(pararDescanso,1500); } r--; };
+  up(); S._desc=setInterval(up,1000);
+}
 function marcarEx(tid,k,el,n){
   const f=S.feitos[tid], p=f.indexOf(k); if(p<0) f.push(k); else f.splice(p,1);
-  el.classList.toggle('ok',p<0); el.querySelector('.ck').textContent=p<0?'✓':k+1;
+  el.classList.toggle('ok',p<0);
+  const ck=el.querySelector('.ck'); if(ck) ck.textContent=p<0?'✓':k+1;
+  const lt=el.querySelector('.let'); if(lt){ const j=[...el.parentElement.children].indexOf(el); lt.textContent=p<0?'✓':'ABCDE'[j]; }
   $('#pg').style.width=(f.length/n*100)+'%'; $('#pgt').textContent=`${f.length} de ${n} feitos`;
+  const t=S.al.treinos.find(x=>x.id===tid), ex=t&&t.exercicios||[];
+  /* no conjugado, o descanso só conta depois do último do grupo */
+  if(p<0&&!(ex[k+1]&&ex[k+1].conj)) iniciarDescanso(parseInt(ex[k].descanso,10));
 }
 async function concluirTreino(tid,i){
   const t=S.al.treinos.find(x=>x.id===tid), f=S.feitos[tid]||[];
   if(!f.length&&!confirm('Nenhum exercício marcado. Concluir mesmo assim?')) return;
-  const reg={alunoId:S.al.aluno.id,treinoId:tid,nome:t.nome,data:hoje(),feitos:f.length,total:(t.exercicios||[]).length};
-  try{ const id=await Store.add(P('registros'),reg); S.al.regs.unshift({id,...reg}); S.feitos[tid]=[]; toast('Treino concluído! Mandou bem 🔥'); go('aTreinos',(i+1)%S.al.treinos.length); }
+  const min=S.emTreino?Math.round((Date.now()-S.emTreino.inicio)/60000):0;
+  const reg={alunoId:S.al.aluno.id,treinoId:tid,nome:t.nome,data:hoje(),feitos:f.length,total:(t.exercicios||[]).length,...(min?{minutos:min}:{})};
+  try{ const id=await Store.add(P('registros'),reg); S.al.regs.unshift({id,...reg}); S.feitos[tid]=[]; S.emTreino=null; pararDescanso(); toast(`Treino concluído${min?' em '+min+' min':''}! Mandou bem 🔥`); go('aTreinos',(i+1)%S.al.treinos.length); }
   catch(e){ toast(erroAuth(e),1); }
 }
 VIEWS.aEvolucao=async el=>{
