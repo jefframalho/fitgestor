@@ -829,10 +829,30 @@ async function excluirAluno(){
 }
 
 /* ---------- treinos ---------- */
+/* ---------- vídeos dos exercícios (biblioteca pronta, tocam dentro do sistema) ---------- */
+const VIDEOS={'Supino reto com barra':'ZN7SuDQpNMk','Supino inclinado com halteres':'G-i3jMIbDmo','Supino declinado':'lVjCX0omsoI','Crucifixo na máquina':'zEcIgGm7fxU','Crucifixo com halteres':'AKBTTSF3tfs','Crossover':'pdMWt71MPlw','Flexão de braço':'RRi0-tvte6A','Puxada frontal':'ScK9NUack_k','Puxada atrás':'Y09q8JO0IwM','Remada baixa':'f8AVh4VBbos','Remada curvada':'VJHBEy2duVc','Remada unilateral':'EUisRaNkCd4','Pulldown':'3uIW1Wmc2_I','Barra fixa':'bypH_WAa5hM','Levantamento terra':'QiqUXcz2iyA','Rosca direta':'n158HS07tOE','Rosca alternada':'865ar4KPodA','Rosca martelo':'HgTwegZjTg8','Rosca scott':'FxrrSYi9nks','Tríceps no pulley':'afkbiAZbGxM','Tríceps corda':'KhK5HWJfsrQ','Tríceps francês':'rLxPTB2J7vo','Tríceps testa':'VakpIeaaeXA','Mergulho no banco':'jH9RXQjbXqs','Desenvolvimento com halteres':'eufDL9MmF8A','Desenvolvimento na máquina':'iAdTW8J2ZDk','Elevação lateral':'gURBTU9VSJg','Elevação frontal':'HgmuchoLIAY','Encolhimento':'cZLgyI2OKcs','Agachamento livre':'rM6SDUdl9fs','Agachamento no smith':'uCT5wfQIQpk','Agachamento búlgaro':'a3-bQbTdA_0','Leg press 45°':'FeZ8D00iK5E','Cadeira extensora':'--p0Ff7R-Io','Mesa flexora':'sWSm1pWb3lw','Cadeira flexora':'E59lnzU_LE4','Stiff':'BHfY5-jGNDA','Afundo':'qt4zBsK8z7U','Elevação pélvica':'vvIc6wdDyTc','Cadeira abdutora':'gPDntkB838U','Cadeira adutora':'Wf602gn_9zU','Panturrilha em pé':'qWHH0We_9r0','Panturrilha sentado':'Vp788-iQqiI','Abdominal supra':'tGobCIvFPHI','Abdominal infra':'WQaTpmhLUEs','Prancha':'Yu0wjtD5FkU','Esteira':'Zj1D0MIP8Yw','Bicicleta ergométrica':'_NyqsWSkOKc','Elíptico':'Rltlu55sBLE','Escada':'nal_FtVy8yk'};
+const chaveEx=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const PAL_FRACAS=new Set(['com','na','no','de','do','da','em','a','o','e','para','pegada','maquina','aparelho']);
+const tokens=n=>chaveEx(n).split(' ').filter(w=>w&&!PAL_FRACAS.has(w));
+const _vid=Object.entries(VIDEOS).map(([n,id])=>({n,id,k:chaveEx(n),t:tokens(n)})), _vcache={};
+/* acha o vídeo pelo nome do exercício: igual, ou o mais parecido (mesma 1ª palavra e quase todas as outras) */
+function videoId(nome){
+  const k=chaveEx(nome); if(!k) return ''; if(k in _vcache) return _vcache[k];
+  let r=(_vid.find(v=>v.k===k)||{}).id||'';
+  if(!r){ const t=new Set(tokens(nome)); let best=0;
+    _vid.forEach(v=>{ if(!t.has(v.t[0])) return; const sc=v.t.filter(w=>t.has(w)).length/v.t.length; if(sc>best&&sc>=.6){ best=sc; r=v.id; } }); }
+  return _vcache[k]=r;
+}
+const linkVideo=nome=>{ const id=videoId(nome); return id?'https://youtu.be/'+id:''; };
+function verVideo(nome){
+  const id=videoId(nome); if(!id) return;
+  abrirModal(`<h2 style="margin-bottom:12px">${esc(nome)}</h2><div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000"><iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1&autoplay=1" title="${esc(nome)}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="mfoot"><a class="btn ghost" href="https://youtu.be/${id}" target="_blank" rel="noopener">Abrir no YouTube</a><button class="btn p" onclick="fecharModal()">Fechar</button></div>`,true);
+}
+const btnVideo=(x,curto)=>videoId(x&&x.nome)?`<button type="button" class="btn sm ghost vbtn" title="Ver o vídeo do exercício" data-n="${esc(x.nome)}" onclick="event.stopPropagation();verVideo(this.dataset.n)">▶${curto?'':' Vídeo'}</button>`:'';
 const descEx=x=>[x.series&&x.reps?`${x.series}x${x.reps}`:(x.series?x.series+' séries':(x.reps?x.reps+' reps':'')),x.carga?x.carga+(isNaN(x.carga)?'':' kg'):'',x.descanso?'descanso '+x.descanso+(isNaN(x.descanso)?'':'s'):''].filter(Boolean).join(' · ');
 function textoFicha(a,ts){
   let s=`🏋️ *${S.acad.nome}*\nOlá, ${primeiroNome(a.nome)}! Segue sua ficha de treino:\n`;
-  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); s+=`${i+1}. ${x.nome}${d?' — '+d:''}${x.dica?`\n   💡 ${x.dica}`:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
+  ts.forEach(t=>{ s+=`\n*${t.nome}*${t.dias?` (${t.dias})`:''}\n`; (t.exercicios||[]).forEach((x,i)=>{ const d=descEx(x); const v=linkVideo(x.nome); s+=`${i+1}. ${x.nome}${d?' — '+d:''}${x.dica?`\n   💡 ${x.dica}`:''}${v?`\n   ▶ ${v}`:''}\n`; }); if(t.obs) s+=`📝 ${t.obs}\n`; });
   return s+`\n📱 Acompanhe no seu painel: ${urlPainel()}\nBons treinos! 💪`;
 }
 ABAS.treinos=async(el,a)=>{
@@ -844,7 +864,7 @@ ABAS.treinos=async(el,a)=>{
 };
 function cardTreino(t,a){
   return `<div class="card"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub" style="margin-bottom:6px">${esc(t.dias||'')}${t.atualizadoEm?' · atualizado em '+fmtD(t.atualizadoEm):''}</p>
-  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}${x.dica?' · 💡 '+esc(x.dica):''}</div></div></div>`).join('')}
+  ${(t.exercicios||[]).map((x,i)=>`<div class="li" style="padding:7px 0"><span class="sub" style="width:18px">${i+1}</span><div style="flex:1"><b>${esc(x.nome)}</b><div class="sub">${esc(descEx(x))}${x.dica?' · 💡 '+esc(x.dica):''}</div></div>${btnVideo(x,true)}</div>`).join('')}
   ${t.obs?`<p class="sub" style="margin-top:8px">📝 ${esc(t.obs)}</p>`:''}
   <div class="row" style="margin-top:12px;gap:6px"><button class="btn sm ghost" onclick="editarTreino('${t.id}')">✏️ Editar</button><button class="btn sm ghost" onclick="copiarTreino('${t.id}')">⧉ Copiar para outro aluno</button>${a.telefone?`<a class="btn sm g" target="_blank" href="${wa(a.telefone,textoFicha(a,[t]))}">📲 Enviar</a>`:''}<button class="btn sm d" title="Excluir" onclick="excluirTreino('${t.id}')">🗑</button></div></div>`;
 }
@@ -1280,7 +1300,7 @@ VIEWS.aTreinos=async(el,i)=>{
   const t=treinos[i], f=S.feitos[t.id]||(S.feitos[t.id]=[]), n=(t.exercicios||[]).length;
   el.innerHTML=kpis+`<div class="chips">${treinos.map((x,k)=>`<a class="chip ${k===i?'on':''}" onclick="go('aTreinos',${k})">${esc(rotuloCurto(x.nome,k))}</a>`).join('')}</div>
   <div class="card" style="margin-bottom:12px"><h2 style="margin:0">${esc(t.nome)}</h2><p class="sub">${esc(t.dias||'')}${t.dias?' · ':''}${n} exercícios${regs[0]&&regs[0].treinoId!==t.id&&i===((treinos.findIndex(x=>x.id===regs[0].treinoId)+1)%treinos.length)?' · <b style="color:var(--acc)">próximo da sequência</b>':''}</p>${t.obs?`<p class="sub" style="margin-top:6px">📝 ${esc(t.obs)}</p>`:''}<div class="prog" style="margin-top:12px"><i id="pg" style="width:${n?f.length/n*100:0}%"></i></div><p class="sub" id="pgt" style="margin-top:4px;font-size:12px">${f.length} de ${n} feitos</p></div>
-  ${(t.exercicios||[]).map((x,k)=>`<div class="exc ${f.includes(k)?'ok':''}" onclick="marcarEx('${t.id}',${k},this,${n})"><div class="ck">${f.includes(k)?'✓':k+1}</div><div><div class="nm" style="font-weight:600">${esc(x.nome)}</div><div class="sub">${esc(descEx(x))}</div>${x.dica?`<div class="sub" style="font-size:12px;margin-top:2px">💡 ${esc(x.dica)}</div>`:''}</div></div>`).join('')}
+  ${(t.exercicios||[]).map((x,k)=>`<div class="exc ${f.includes(k)?'ok':''}" onclick="marcarEx('${t.id}',${k},this,${n})"><div class="ck">${f.includes(k)?'✓':k+1}</div><div><div class="nm" style="font-weight:600">${esc(x.nome)}</div><div class="sub">${esc(descEx(x))}</div>${x.dica?`<div class="sub" style="font-size:12px;margin-top:2px">💡 ${esc(x.dica)}</div>`:''}</div><div style="margin-left:auto">${btnVideo(x)}</div></div>`).join('')}
   <button class="btn p" style="width:100%;justify-content:center;padding:14px;margin-top:8px" onclick="concluirTreino('${t.id}',${i})">✅ Concluir treino</button>`;
 };
 function marcarEx(tid,k,el,n){
